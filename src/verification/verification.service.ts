@@ -19,6 +19,7 @@ import {
   VerificationDetail,
   ProviderListDto,
 } from './dto/verification-result.dto';
+import { SolanaVerificationService } from './services/solana-verification.service';
 
 @Injectable()
 export class VerificationService {
@@ -29,6 +30,7 @@ export class VerificationService {
     @InjectModel(Verification.name)
     private verificationModel: Model<VerificationDocument>,
     private configService: ConfigService,
+    private solanaVerificationService: SolanaVerificationService,
   ) {
     const rpcUrl = this.configService.get<string>(
       'SOLANA_RPC_URL',
@@ -120,8 +122,6 @@ export class VerificationService {
 
   /**
    * Refresh verification status from on-chain
-   * NOTE: This is a placeholder for actual on-chain checking
-   * In production, you would integrate with SAS SDK here
    */
   async refreshVerificationFromChain(
     walletAddress: string,
@@ -131,16 +131,8 @@ export class VerificationService {
       `Refreshing verification for ${walletAddress} from on-chain...`,
     );
 
-    // TODO: Implement actual on-chain verification check using SAS SDK
-    // For now, we just return the current status
-    // Future implementation will:
-    // 1. Derive attestation PDA using wallet address
-    // 2. Fetch attestation account from Solana
-    // 3. Verify expiration and status
-    // 4. Update database accordingly
-
     try {
-      // Placeholder for on-chain check
+      // Check on-chain attestation
       const result = await this.checkOnChainAttestation(
         walletAddress,
         provider,
@@ -160,29 +152,64 @@ export class VerificationService {
   }
 
   /**
-   * Placeholder for on-chain attestation checking
-   * TODO: Implement using SAS SDK
+   * Check on-chain attestation using Solana blockchain
    */
   private async checkOnChainAttestation(
     walletAddress: string,
     provider?: VerificationProvider,
   ): Promise<OnChainVerificationResult> {
-    // This is a placeholder
-    // In production, you would:
-    // 1. Use sas-lib to derive attestation PDA
-    // 2. Fetch the attestation account
-    // 3. Verify it's valid and not expired
-    // 4. Return the result
-
-    this.logger.debug(
-      `Checking on-chain attestation for ${walletAddress} (placeholder)`,
+    this.logger.log(
+      `Checking on-chain attestation for ${walletAddress} (provider: ${provider || 'auto-detect'})`,
     );
 
-    return {
-      isVerified: false,
-      provider: provider || VerificationProvider.CIVIC_LIVENESS,
-      status: VerificationStatus.PENDING,
-    };
+    try {
+      // If provider specified, check that specific one
+      if (provider) {
+        return await this.solanaVerificationService.checkVerification(
+          walletAddress,
+          provider,
+        );
+      }
+
+      // Otherwise, check all Civic Pass types and return the highest one found
+      const providers = [
+        VerificationProvider.CIVIC_UNIQUENESS, // Check highest tier first
+        VerificationProvider.CIVIC_ID,
+        VerificationProvider.CIVIC_LIVENESS,
+        VerificationProvider.CIVIC_CAPTCHA,
+      ];
+
+      for (const providerType of providers) {
+        const result = await this.solanaVerificationService.checkVerification(
+          walletAddress,
+          providerType,
+        );
+
+        if (result.isVerified) {
+          this.logger.log(
+            `Found active ${providerType} pass for ${walletAddress}`,
+          );
+          return result;
+        }
+      }
+
+      // No active pass found
+      this.logger.log(`No active Civic Pass found for ${walletAddress}`);
+      return {
+        isVerified: false,
+        provider: VerificationProvider.CIVIC_LIVENESS,
+        status: VerificationStatus.PENDING,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to check on-chain attestation: ${error.message}`,
+      );
+      return {
+        isVerified: false,
+        provider: provider || VerificationProvider.CIVIC_LIVENESS,
+        status: VerificationStatus.FAILED,
+      };
+    }
   }
 
   /**
