@@ -5,16 +5,19 @@ import { TippingController } from './tipping.controller';
 import { TippingService } from './tipping.service';
 import { Tip, TipSchema } from './tip.schema';
 import { AuthModule } from '../auth/auth.module';
+import { ReputationModule } from '../reputation/reputation.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Tip.name, schema: TipSchema }]),
     ConfigModule,
     AuthModule,
+    ReputationModule,
   ],
   controllers: [TippingController],
   providers: [TippingService],
   exports: [TippingService], // Other modules can access tipping data
 })
 export class TippingModule {}
+
 

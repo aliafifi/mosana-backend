@@ -6,6 +6,7 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { Tip, TipDocument } from './tip.schema';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { TIPPING_CONFIG } from './tipping.config';
+import { ReputationService } from '../reputation/reputation.service';
 
 @Injectable()
 export class TippingService {
@@ -15,6 +16,7 @@ export class TippingService {
   constructor(
     @InjectModel(Tip.name) private tipModel: Model<TipDocument>,
     private configService: ConfigService,
+    private reputationService: ReputationService,
   ) {
     const rpcUrl = this.configService.get<string>('SOLANA_RPC_URL');
     this.solanaConnection = new Connection(rpcUrl || 'https://api.devnet.solana.com');
@@ -70,6 +72,26 @@ export class TippingService {
       status: 'completed',
       tippedAt: new Date(),
     });
+
+    // Update reputation: sender sent a tip
+    try {
+      await this.reputationService.updateMetrics(fromWallet, {
+        tipsSent: amount,
+      });
+    } catch (error) {
+      // Silently fail - don't block tipping if reputation update fails
+      this.logger.warn(`Reputation update failed for sender ${fromWallet}: ${error.message}`);
+    }
+
+    // Update reputation: receiver got a tip
+    try {
+      await this.reputationService.updateMetrics(toWallet, {
+        tipsReceived: amount,
+      });
+    } catch (error) {
+      // Silently fail - don't block tipping if reputation update fails
+      this.logger.warn(`Reputation update failed for receiver ${toWallet}: ${error.message}`);
+    }
 
     // TODO: Actually burn tokens (implement token burn function)
     // TODO: Add toRewards to daily rewards pool
