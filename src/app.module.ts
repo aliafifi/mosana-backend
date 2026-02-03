@@ -15,6 +15,7 @@ import { SocialGoodModule } from './social-good/social-good.module';
 import { DaoModule } from './dao/dao.module';
 import { ReputationModule } from './reputation/reputation.module';
 import { VerificationModule } from './verification/verification.module';
+import { ExportModule } from './export/export.module';
 
 
 @Module({
@@ -48,6 +49,7 @@ import { VerificationModule } from './verification/verification.module';
     DaoModule,
     ReputationModule,
     VerificationModule,
+    ExportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
