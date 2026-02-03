@@ -6,6 +6,7 @@ import { Proposal, ProposalDocument } from './schemas/proposal.schema';
 import { CreateDaoDto } from './dto/create-dao.dto';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { CastVoteDto } from './dto/cast-vote.dto';
+import { ReputationService } from '../reputation/reputation.service';
 
 @Injectable()
 export class DaoService {
@@ -14,6 +15,7 @@ export class DaoService {
   constructor(
     @InjectModel(Dao.name) private daoModel: Model<DaoDocument>,
     @InjectModel(Proposal.name) private proposalModel: Model<ProposalDocument>,
+    private reputationService: ReputationService,
   ) {}
 
   // ============================================================================
@@ -36,6 +38,17 @@ export class DaoService {
     });
 
     await dao.save();
+
+    // Update reputation: creator joined a DAO (their own)
+    try {
+      await this.reputationService.updateMetrics(creatorWallet, {
+        daosJoined: 1,
+      });
+    } catch (error) {
+      // Silently fail - don't block DAO creation if reputation update fails
+      this.logger.warn(`Reputation update failed for ${creatorWallet}: ${error.message}`);
+    }
+
     this.logger.log(`DAO created: ${dao._id}`);
     return dao;
   }
@@ -96,6 +109,16 @@ export class DaoService {
     dao.members.push(walletAddress);
     dao.memberCount = dao.members.length;
     await dao.save();
+
+    // Update reputation: user joined a DAO
+    try {
+      await this.reputationService.updateMetrics(walletAddress, {
+        daosJoined: 1,
+      });
+    } catch (error) {
+      // Silently fail - don't block DAO join if reputation update fails
+      this.logger.warn(`Reputation update failed for ${walletAddress}: ${error.message}`);
+    }
 
     this.logger.log(`User ${walletAddress} joined DAO ${daoId}`);
     return dao;
@@ -163,6 +186,16 @@ export class DaoService {
     // Update DAO proposal count
     dao.proposalCount++;
     await dao.save();
+
+    // Update reputation: user created a proposal
+    try {
+      await this.reputationService.updateMetrics(proposerWallet, {
+        proposalsCreated: 1,
+      });
+    } catch (error) {
+      // Silently fail - don't block proposal creation if reputation update fails
+      this.logger.warn(`Reputation update failed for ${proposerWallet}: ${error.message}`);
+    }
 
     this.logger.log(`Proposal created: ${proposal._id} in DAO ${daoId}`);
     return proposal;
@@ -252,6 +285,16 @@ export class DaoService {
     proposal.participationRate = (proposal.totalVotes / dao.memberCount) * 100;
 
     await proposal.save();
+
+    // Update reputation: user cast a vote
+    try {
+      await this.reputationService.updateMetrics(voterWallet, {
+        votesCast: 1,
+      });
+    } catch (error) {
+      // Silently fail - don't block voting if reputation update fails
+      this.logger.warn(`Reputation update failed for ${voterWallet}: ${error.message}`);
+    }
 
     this.logger.log(`Vote cast: ${voterWallet} voted ${castVoteDto.vote} on proposal ${proposalId}`);
 
