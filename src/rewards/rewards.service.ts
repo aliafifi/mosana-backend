@@ -7,6 +7,7 @@ import { Connection, Keypair, PublicKey, Transaction, SystemProgram } from '@sol
 import { DailyEngagement, DailyEngagementDocument } from './reward.schema';
 import { Reward, RewardDocument } from './reward.schema';
 import { TOKENOMICS } from './rewards.config';
+import { ReputationService } from '../reputation/reputation.service';
 
 @Injectable()
 export class RewardsService {
@@ -19,6 +20,7 @@ export class RewardsService {
     @InjectModel(Reward.name)
     private rewardModel: Model<RewardDocument>,
     private configService: ConfigService,
+    private reputationService: ReputationService,
   ) {
     const rpcUrl = this.configService.get<string>('SOLANA_RPC_URL');
     this.solanaConnection = new Connection(rpcUrl || 'https://api.devnet.solana.com');
@@ -116,10 +118,21 @@ export class RewardsService {
       };
     }
 
+    // Get user's reputation multiplier
+    let reputationMultiplier = 1.0;
+    try {
+      const reputation = await this.reputationService.getReputation(walletAddress);
+      reputationMultiplier = reputation.rewardMultiplier;
+    } catch (error) {
+      // Silently fail - use default multiplier if reputation lookup fails
+      this.logger.warn(`Failed to get reputation for ${walletAddress}: ${error.message}`);
+    }
+
     // Calculate rough estimate (actual depends on total platform activity)
     const currentYear = new Date().getFullYear();
     const dailyPool = TOKENOMICS.getDailyPool(currentYear);
-    const estimatedTokens = Math.floor(dailyPool * 0.01); // Very rough estimate
+    const baseEstimate = Math.floor(dailyPool * 0.01);
+    const estimatedTokens = Math.floor(baseEstimate * reputationMultiplier);
 
     return {
       date: engagement.date,
@@ -131,6 +144,7 @@ export class RewardsService {
       commentsGiven: engagement.commentsGiven,
       totalPoints: engagement.totalPoints,
       estimatedTokens,
+      reputationMultiplier,
     };
   }
 
@@ -180,14 +194,31 @@ export class RewardsService {
         return;
       }
 
-      // Calculate total points
-      const totalPoints = engagements.reduce((sum, e) => sum + e.totalPoints, 0);
+      // Calculate total points WITH reputation multipliers
+      let totalWeightedPoints = 0;
+      const userMultipliers = new Map<string, number>();
 
-      this.logger.log(`Total points: ${totalPoints}, Daily pool: ${dailyPool}`);
+      for (const engagement of engagements) {
+        try {
+          const reputation = await this.reputationService.getReputation(engagement.walletAddress);
+          const multiplier = reputation.rewardMultiplier;
+          userMultipliers.set(engagement.walletAddress, multiplier);
+          totalWeightedPoints += engagement.totalPoints * multiplier;
+        } catch (error) {
+          // Default multiplier if reputation lookup fails
+          userMultipliers.set(engagement.walletAddress, 1.0);
+          totalWeightedPoints += engagement.totalPoints;
+          this.logger.warn(`Failed to get reputation for ${engagement.walletAddress}: ${error.message}`);
+        }
+      }
+
+      this.logger.log(`Total weighted points: ${totalWeightedPoints}, Daily pool: ${dailyPool}`);
 
       // Distribute to each user proportionally
       for (const engagement of engagements) {
-        const userShare = engagement.totalPoints / totalPoints;
+        const multiplier = userMultipliers.get(engagement.walletAddress) || 1.0;
+        const weightedPoints = engagement.totalPoints * multiplier;
+        const userShare = weightedPoints / totalWeightedPoints;
         const tokensEarned = Math.floor(dailyPool * userShare);
 
         // Skip if less than 1 token
@@ -218,7 +249,7 @@ export class RewardsService {
           await engagement.save();
 
           this.logger.log(
-            `Distributed ${tokensEarned} tokens to ${engagement.walletAddress}`,
+            `Distributed ${tokensEarned} tokens to ${engagement.walletAddress} (${multiplier}x multiplier)`,
           );
         } catch (error) {
           this.logger.error(

@@ -7,6 +7,7 @@ import { RewardsService } from './rewards.service';
 import { DailyEngagement, DailyEngagementSchema } from './reward.schema';
 import { Reward, RewardSchema } from './reward.schema';
 import { AuthModule } from '../auth/auth.module';
+import { ReputationModule } from '../reputation/reputation.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AuthModule } from '../auth/auth.module';
     ScheduleModule.forRoot(), // Enables cron jobs
     ConfigModule,
     AuthModule,
+    ReputationModule,
   ],
   controllers: [RewardsController],
   providers: [RewardsService],
