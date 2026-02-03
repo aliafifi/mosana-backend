@@ -1,0 +1,28 @@
+import { Model } from 'mongoose';
+import { DaoDocument } from './schemas/dao.schema';
+import { ProposalDocument } from './schemas/proposal.schema';
+import { CreateDaoDto } from './dto/create-dao.dto';
+import { CreateProposalDto } from './dto/create-proposal.dto';
+import { CastVoteDto } from './dto/cast-vote.dto';
+export declare class DaoService {
+    private daoModel;
+    private proposalModel;
+    private readonly logger;
+    constructor(daoModel: Model<DaoDocument>, proposalModel: Model<ProposalDocument>);
+    createDao(createDaoDto: CreateDaoDto, creatorWallet: string): Promise<DaoDocument>;
+    getDaoById(daoId: string): Promise<DaoDocument>;
+    getAllDaos(status?: string, sortBy?: string): Promise<DaoDocument[]>;
+    getUserDaos(walletAddress: string): Promise<DaoDocument[]>;
+    joinDao(daoId: string, walletAddress: string): Promise<DaoDocument>;
+    leaveDao(daoId: string, walletAddress: string): Promise<DaoDocument>;
+    createProposal(daoId: string, createProposalDto: CreateProposalDto, proposerWallet: string): Promise<ProposalDocument>;
+    getProposalById(proposalId: string): Promise<ProposalDocument>;
+    getDaoProposals(daoId: string, status?: string): Promise<ProposalDocument[]>;
+    castVote(proposalId: string, castVoteDto: CastVoteDto, voterWallet: string): Promise<ProposalDocument>;
+    getUserVoteOnProposal(proposalId: string, walletAddress: string): Promise<any>;
+    private canUserPropose;
+    private checkAndFinalizeProposal;
+    private finalizeProposal;
+    getDaoStats(daoId: string): Promise<any>;
+    getPlatformStats(): Promise<any>;
+}
