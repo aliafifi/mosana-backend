@@ -4,6 +4,7 @@ import { SocialGoodService } from './social-good.service';
 import { SocialGoodController } from './social-good.controller';
 import { Cause, CauseSchema } from './schemas/cause.schema';
 import { Donation, DonationSchema } from './schemas/donation.schema';
+import { ReputationModule } from '../reputation/reputation.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { Donation, DonationSchema } from './schemas/donation.schema';
       { name: Cause.name, schema: CauseSchema },
       { name: Donation.name, schema: DonationSchema },
     ]),
+    ReputationModule,
   ],
   controllers: [SocialGoodController],
   providers: [SocialGoodService],

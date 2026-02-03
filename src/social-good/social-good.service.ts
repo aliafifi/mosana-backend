@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Cause, CauseDocument } from './schemas/cause.schema';
 import { Donation, DonationDocument } from './schemas/donation.schema';
 import { CreateCauseDto } from './dto/create-cause.dto';
+import { ReputationService } from '../reputation/reputation.service';
 
 @Injectable()
 export class SocialGoodService {
@@ -12,6 +13,7 @@ export class SocialGoodService {
   constructor(
     @InjectModel(Cause.name) private causeModel: Model<CauseDocument>,
     @InjectModel(Donation.name) private donationModel: Model<DonationDocument>,
+    private reputationService: ReputationService,
   ) {}
 
   /**
@@ -111,6 +113,16 @@ export class SocialGoodService {
     
     await cause.save();
 
+    // Update reputation: donor gave to charity
+    try {
+      await this.reputationService.updateMetrics(donorWallet, {
+        charityDonations: donationAmount,
+      });
+    } catch (error) {
+      // Silently fail - don't block donation if reputation update fails
+      this.logger.warn(`Reputation update failed for ${donorWallet}: ${error.message}`);
+    }
+
     this.logger.log(
       `Donation processed: ${donorWallet} donated ${donationAmount} (${charityPercentage}%) to ${cause.name} from ${source}`,
     );
@@ -163,6 +175,16 @@ export class SocialGoodService {
     cause.totalDonors = uniqueDonors.length;
     
     await cause.save();
+
+    // Update reputation: donor gave to charity
+    try {
+      await this.reputationService.updateMetrics(donorWallet, {
+        charityDonations: amount,
+      });
+    } catch (error) {
+      // Silently fail - don't block donation if reputation update fails
+      this.logger.warn(`Reputation update failed for ${donorWallet}: ${error.message}`);
+    }
 
     this.logger.log(
       `Direct donation: ${donorWallet} donated ${amount} tokens to ${cause.name}`,
