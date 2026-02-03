@@ -14,6 +14,7 @@ import { VenturesModule } from './ventures/ventures.module';
 import { SocialGoodModule } from './social-good/social-good.module';
 import { DaoModule } from './dao/dao.module';
 import { ReputationModule } from './reputation/reputation.module';
+import { VerificationModule } from './verification/verification.module';
 
 
 @Module({
@@ -46,6 +47,7 @@ import { ReputationModule } from './reputation/reputation.module';
     SocialGoodModule,
     DaoModule,
     ReputationModule,
+    VerificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

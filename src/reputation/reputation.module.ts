@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ReputationService } from './reputation.service';
 import { ReputationController } from './reputation.controller';
 import { Reputation, ReputationSchema } from './schemas/reputation.schema';
+import { VerificationModule } from '../verification/verification.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { Reputation, ReputationSchema } from './schemas/reputation.schema';
     MongooseModule.forFeature([
       { name: Reputation.name, schema: ReputationSchema },
     ]),
+    VerificationModule,
   ],
   controllers: [ReputationController],
   providers: [ReputationService],

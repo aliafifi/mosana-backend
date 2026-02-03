@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Reputation, ReputationDocument } from './schemas/reputation.schema';
@@ -8,12 +8,16 @@ import {
   AVAILABLE_BADGES,
 } from './interfaces/scoring.interface';
 import { ApplyPenaltyDto } from './dto/penalty.dto';
+import { VerificationService } from '../verification/verification.service';
 
 @Injectable()
 export class ReputationService {
+  private readonly logger = new Logger(ReputationService.name);
+
   constructor(
     @InjectModel(Reputation.name)
     private reputationModel: Model<ReputationDocument>,
+    private verificationService: VerificationService,
   ) {}
 
   // ============================================
@@ -240,18 +244,55 @@ export class ReputationService {
   }
 
   // ============================================
-  // GET REPUTATION BY WALLET
+  // GET REPUTATION BY WALLET (with verification bonus)
   // ============================================
    
-  async getReputation(walletAddress: string): Promise<ReputationDocument> {
-    const reputation = await this.reputationModel.findOne({ walletAddress });
+  async getReputation(walletAddress: string): Promise<any> {
+    let reputation: ReputationDocument | null = await this.reputationModel.findOne({ walletAddress });
   
     if (!reputation) {
       // Auto-create on first lookup
-      return await this.calculateReputation(walletAddress);
+      reputation = await this.calculateReputation(walletAddress);
     }
+
+    // At this point, reputation is definitely not null
+    const reputationObj = reputation.toObject();
+
+    // Add verification multiplier to response
+    let verificationMultiplier = 1.0;
+    let verificationStatus: any = null;
+    try {
+      const status = await this.verificationService.checkVerificationStatus(walletAddress);
+      verificationStatus = status;
+      verificationMultiplier = status.totalMultiplierBonus;
+    } catch (error) {
+      this.logger.warn(`Failed to get verification multiplier for ${walletAddress}: ${error.message}`);
+    }
+
+    // Calculate total multiplier including verification
+    const baseMultiplier = reputation.rewardMultiplier || 1.0;
+    const totalMultiplier = Math.min(
+      baseMultiplier * verificationMultiplier, 
+      5.0
+    );
   
-    return reputation;
+    return {
+      ...reputationObj,
+      verificationMultiplier,
+      totalMultiplier,
+      verificationStatus: verificationStatus || undefined,
+    };
+  }
+
+  // ============================================
+  // CALCULATE REWARD MULTIPLIER (used by Rewards module)
+  // ============================================
+
+  async calculateRewardMultiplier(walletAddress: string): Promise<number> {
+    const reputationData = await this.getReputation(walletAddress);
+    
+    // Return the total multiplier (includes verification bonus)
+    return reputationData.totalMultiplier || 1.0;
   }
 
   // ============================================
@@ -262,7 +303,7 @@ export class ReputationService {
     walletAddress: string,
     updates: Partial<Reputation['metrics']>
   ): Promise<void> {
-    let reputation = await this.reputationModel.findOne({ walletAddress });
+    let reputation: ReputationDocument | null = await this.reputationModel.findOne({ walletAddress });
     
     if (!reputation) {
       reputation = new this.reputationModel({
@@ -273,13 +314,16 @@ export class ReputationService {
 
     // Merge updates into existing metrics
     Object.keys(updates).forEach(key => {
-      reputation.metrics[key] = (reputation.metrics[key] || 0) + updates[key];
+      if (reputation) {
+        reputation.metrics[key] = (reputation.metrics[key] || 0) + updates[key];
+      }
     });
 
-    await reputation.save();
-
-    // Recalculate reputation after metrics update
-    await this.calculateReputation(walletAddress);
+    if (reputation) {
+      await reputation.save();
+      // Recalculate reputation after metrics update
+      await this.calculateReputation(walletAddress);
+    }
   }
 
   // ============================================
@@ -290,7 +334,13 @@ export class ReputationService {
     penaltyDto: ApplyPenaltyDto,
     adminWallet: string
   ): Promise<ReputationDocument> {
-    const reputation = await this.getReputation(penaltyDto.walletAddress);
+    const reputation = await this.reputationModel.findOne({ 
+      walletAddress: penaltyDto.walletAddress 
+    });
+
+    if (!reputation) {
+      throw new NotFoundException('Reputation not found');
+    }
 
     reputation.penalties.push({
       reason: penaltyDto.reason,
