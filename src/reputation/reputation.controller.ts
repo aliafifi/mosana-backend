@@ -34,6 +34,9 @@ export class ReputationController {
           totalScore: reputation.totalScore,
           level: reputation.level,
           rewardMultiplier: reputation.rewardMultiplier,
+          verificationMultiplier: reputation.verificationMultiplier,  // ← Add this
+          totalMultiplier: reputation.totalMultiplier,                // ← Add this
+          verificationStatus: reputation.verificationStatus,          // ← Add this
           breakdown: reputation.breakdown,
           badges: reputation.badges,
           isFlagged: reputation.isFlagged,
@@ -116,6 +119,9 @@ export class ReputationController {
           totalScore: reputation.totalScore,
           level: reputation.level,
           rewardMultiplier: reputation.rewardMultiplier,
+          verificationMultiplier: reputation.verificationMultiplier,  // ← Add this
+          totalMultiplier: reputation.totalMultiplier,                // ← Add this
+          verificationStatus: reputation.verificationStatus,          // ← Add this
           breakdown: reputation.breakdown,
           metrics: reputation.metrics,
           badges: reputation.badges,
