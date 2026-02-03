@@ -9,6 +9,7 @@ import { keypairIdentity, generateSigner, percentAmount } from '@metaplex-founda
 import bs58 from 'bs58';
 import { Nft, NftDocument } from './schemas/nft.schema';
 import { ArweaveService } from './services/arweave.service';
+import { ReputationService } from '../reputation/reputation.service';
 
 @Injectable()
 export class NftMintingService {
@@ -19,6 +20,7 @@ export class NftMintingService {
     @InjectModel(Nft.name) private nftModel: Model<NftDocument>,
     private arweaveService: ArweaveService,
     private configService: ConfigService,
+    private reputationService: ReputationService,
   ) {
     const rpcUrl = this.configService.get<string>('SOLANA_RPC_URL') || 'https://api.mainnet-beta.solana.com';
     this.connection = new Connection(rpcUrl, 'confirmed');
@@ -73,6 +75,16 @@ export class NftMintingService {
 
       await nft.save();
       this.logger.log(`NFT saved to database: ${nft._id}`);
+
+      // Update reputation: creator minted an NFT
+      try {
+        await this.reputationService.updateMetrics(post.author.walletAddress, {
+          nftsMinted: 1,
+        });
+      } catch (error) {
+        // Silently fail - don't block NFT minting if reputation update fails
+        this.logger.warn(`Reputation update failed for ${post.author.walletAddress}: ${error.message}`);
+      }
 
       return nft;
     } catch (error) {
