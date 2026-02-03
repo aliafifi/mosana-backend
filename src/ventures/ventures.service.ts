@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Venture, VentureDocument } from './schemas/venture.schema';
 import { RevenueSplit, RevenueSplitDocument } from './schemas/revenue-split.schema';
 import { CreateVentureDto } from './dto/create-venture.dto';
+import { ReputationService } from '../reputation/reputation.service';
 
 @Injectable()
 export class VenturesService {
@@ -12,6 +13,7 @@ export class VenturesService {
   constructor(
     @InjectModel(Venture.name) private ventureModel: Model<VentureDocument>,
     @InjectModel(RevenueSplit.name) private revenueSplitModel: Model<RevenueSplitDocument>,
+    private reputationService: ReputationService,
   ) {}
 
   /**
@@ -65,6 +67,17 @@ export class VenturesService {
     });
 
     await venture.save();
+
+    // Update reputation: initiator joined a venture (auto-accepted)
+    try {
+      await this.reputationService.updateMetrics(initiatorWallet, {
+        venturesJoined: 1,
+      });
+    } catch (error) {
+      // Silently fail - don't block venture creation if reputation update fails
+      this.logger.warn(`Reputation update failed for ${initiatorWallet}: ${error.message}`);
+    }
+
     this.logger.log(`Venture created for post ${createVentureDto.postId} by ${initiatorWallet}`);
 
     return venture;
@@ -100,6 +113,17 @@ export class VenturesService {
     }
 
     await venture.save();
+
+    // Update reputation: user joined a venture
+    try {
+      await this.reputationService.updateMetrics(walletAddress, {
+        venturesJoined: 1,
+      });
+    } catch (error) {
+      // Silently fail - don't block acceptance if reputation update fails
+      this.logger.warn(`Reputation update failed for ${walletAddress}: ${error.message}`);
+    }
+
     return venture;
   }
 
