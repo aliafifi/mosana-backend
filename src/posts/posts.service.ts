@@ -27,7 +27,7 @@ export class PostsService {
     
     // Update reputation: user created a post
     try {
-      await this.reputationService.updateMetrics(createPostDto.author, {
+      await this.reputationService.updateMetrics(walletAddress, {
         totalPosts: 1,
       });
     } catch (error) {
@@ -151,6 +151,16 @@ export class PostsService {
       throw new NotFoundException('Post not found');
     }
 
+    // Update reputation: the POST AUTHOR gets +1 like
+    try {
+      await this.reputationService.updateMetrics(updatedPost.walletAddress, {
+        totalLikes: 1,
+      });
+    } catch (error) {
+      // Silently fail - don't block liking if reputation update fails
+      console.log('Reputation update failed:', error.message);
+    }
+
     return updatedPost;
   }
 
@@ -227,6 +237,16 @@ export class PostsService {
 
     if (!updatedPost) {
       throw new NotFoundException('Post not found');
+    }
+
+    // Update reputation: the POST AUTHOR gets +1 comment
+    try {
+      await this.reputationService.updateMetrics(updatedPost.walletAddress, {
+        totalComments: 1,
+      });
+    } catch (error) {
+      // Silently fail - don't block commenting if reputation update fails
+      console.log('Reputation update failed:', error.message);
     }
 
     return updatedPost;

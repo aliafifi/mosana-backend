@@ -17,10 +17,13 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const post_schema_1 = require("./post.schema");
+const reputation_service_1 = require("../reputation/reputation.service");
 let PostsService = class PostsService {
     postModel;
-    constructor(postModel) {
+    reputationService;
+    constructor(postModel, reputationService) {
         this.postModel = postModel;
+        this.reputationService = reputationService;
     }
     async create(walletAddress, createPostDto) {
         const post = await this.postModel.create({
@@ -31,6 +34,14 @@ let PostsService = class PostsService {
             ...(createPostDto.dedicatedCause && { dedicatedCause: createPostDto.dedicatedCause }),
             ...(createPostDto.charityPercentage && { charityPercentage: createPostDto.charityPercentage }),
         });
+        try {
+            await this.reputationService.updateMetrics(createPostDto.author, {
+                totalPosts: 1,
+            });
+        }
+        catch (error) {
+            console.log('Reputation update failed:', error.message);
+        }
         return post;
     }
     async findAll(page = 1, limit = 20) {
@@ -200,6 +211,7 @@ exports.PostsService = PostsService;
 exports.PostsService = PostsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(post_schema_1.Post.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        reputation_service_1.ReputationService])
 ], PostsService);
 //# sourceMappingURL=posts.service.js.map

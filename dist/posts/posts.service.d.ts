@@ -2,9 +2,11 @@ import { Model } from 'mongoose';
 import { Post, PostDocument } from './post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { ReputationService } from '../reputation/reputation.service';
 export declare class PostsService {
     private postModel;
-    constructor(postModel: Model<PostDocument>);
+    private reputationService;
+    constructor(postModel: Model<PostDocument>, reputationService: ReputationService);
     create(walletAddress: string, createPostDto: CreatePostDto): Promise<Post>;
     findAll(page?: number, limit?: number): Promise<Post[]>;
     getHomeFeed(walletAddress: string, following: string[], page?: number, limit?: number): Promise<Post[]>;
