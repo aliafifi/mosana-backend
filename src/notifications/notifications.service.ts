@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Notification, NotificationDocument, NotificationType } from './schemas/notification.schema';
 import { NotificationPreferences, NotificationPreferencesDocument } from './schemas/notification-preferences.schema';
 import { NotificationsGateway } from './notifications.gateway';
+import { FirebaseService } from '../firebase/firebase.service';
 
 @Injectable()
 export class NotificationsService {
@@ -14,6 +15,7 @@ export class NotificationsService {
     private preferencesModel: Model<NotificationPreferencesDocument>,
     @Inject(forwardRef(() => NotificationsGateway))
     private notificationsGateway: NotificationsGateway,
+    private firebaseService: FirebaseService,
   ) {}
 
   /**
@@ -58,7 +60,33 @@ export class NotificationsService {
       console.log('WebSocket delivery failed (user offline):', error.message);
     }
 
-    // TODO: Send push notification if enabled (Step 7)
+    // 🔥 Send push notification if user is offline or has push enabled
+    try {
+      // Check if push notifications are enabled for this user
+      if (preferences.pushEnabled && this.firebaseService.isConfigured()) {
+        // Get user's FCM tokens from User model
+        const fcmTokens = await this.getUserFcmTokens(data.recipientWallet);
+        
+        if (fcmTokens.length > 0) {
+          // Send push notification to all user's devices
+          await this.firebaseService.sendMulticastPushNotification(
+            fcmTokens,
+            {
+              title: data.title,
+              body: data.message,
+              imageUrl: data.imageUrl,
+            },
+            {
+              notificationId: notification._id.toString(),
+              type: data.type,
+              actionUrl: data.actionUrl || '',
+            },
+          );
+        }
+      }
+    } catch (error) {
+      console.log('Push notification failed:', error.message);
+    }
 
     return notification;
   }
@@ -179,5 +207,23 @@ export class NotificationsService {
       [NotificationType.DAO_PROPOSAL_PASSED]: 'daoProposalPassed',
     };
     return map[type] || 'postLiked';
+  }
+
+  /**
+   * Get user's FCM tokens for push notifications
+   */
+  private async getUserFcmTokens(walletAddress: string): Promise<string[]> {
+    try {
+      // Import User model dynamically to avoid circular dependency
+      const { InjectModel } = require('@nestjs/mongoose');
+      const mongoose = require('mongoose');
+      const User = mongoose.connection.model('User');
+      
+      const user = await User.findOne({ walletAddress }).select('fcmTokens');
+      return user?.fcmTokens || [];
+    } catch (error) {
+      console.error('Failed to get FCM tokens:', error.message);
+      return [];
+    }
   }
 }

@@ -26,6 +26,7 @@ let User = class User {
     selectedCause;
     isActive;
     lastLogin;
+    fcmTokens;
 };
 exports.User = User;
 __decorate([
@@ -84,6 +85,10 @@ __decorate([
     (0, mongoose_1.Prop)({ default: Date.now }),
     __metadata("design:type", Date)
 ], User.prototype, "lastLogin", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], User.prototype, "fcmTokens", void 0);
 exports.User = User = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], User);

@@ -132,6 +132,18 @@ let UsersService = class UsersService {
             return false;
         }
     }
+    async registerFcmToken(walletAddress, fcmToken) {
+        await this.userModel.findOneAndUpdate({ walletAddress }, { $addToSet: { fcmTokens: fcmToken } });
+        return { message: 'FCM token registered successfully' };
+    }
+    async unregisterFcmToken(walletAddress, fcmToken) {
+        await this.userModel.findOneAndUpdate({ walletAddress }, { $pull: { fcmTokens: fcmToken } });
+        return { message: 'FCM token unregistered successfully' };
+    }
+    async getFcmTokens(walletAddress) {
+        const user = await this.userModel.findOne({ walletAddress }).select('fcmTokens');
+        return user?.fcmTokens || [];
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

@@ -15,6 +15,7 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { SetNftPfpDto } from './dto/set-nft-pfp.dto';
+import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto';
 
 @Controller('users')
 export class UsersController {
@@ -72,6 +73,33 @@ export class UsersController {
     @Param('walletAddress') walletAddress: string,
   ) {
     return this.usersService.unfollowUser(req.user.walletAddress, walletAddress);
+  }
+
+  // Register FCM token for push notifications
+  @UseGuards(JwtAuthGuard)
+  @Post('fcm-token')
+  @HttpCode(HttpStatus.OK)
+  async registerFcmToken(
+    @Request() req,
+    @Body() registerFcmTokenDto: RegisterFcmTokenDto,
+  ) {
+    return this.usersService.registerFcmToken(
+      req.user.walletAddress,
+      registerFcmTokenDto.fcmToken,
+    );
+  }
+
+  // Unregister FCM token
+  @UseGuards(JwtAuthGuard)
+  @Delete('fcm-token')
+  async unregisterFcmToken(
+    @Request() req,
+    @Body() registerFcmTokenDto: RegisterFcmTokenDto,
+  ) {
+    return this.usersService.unregisterFcmToken(
+      req.user.walletAddress,
+      registerFcmTokenDto.fcmToken,
+    );
   }
 
   // Get any user's public profile by wallet address (MUST be last to avoid catching other routes)

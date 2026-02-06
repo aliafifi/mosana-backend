@@ -20,4 +20,11 @@ export declare class UsersService {
         message: string;
     }>;
     private verifyNftOwnership;
+    registerFcmToken(walletAddress: string, fcmToken: string): Promise<{
+        message: string;
+    }>;
+    unregisterFcmToken(walletAddress: string, fcmToken: string): Promise<{
+        message: string;
+    }>;
+    getFcmTokens(walletAddress: string): Promise<string[]>;
 }

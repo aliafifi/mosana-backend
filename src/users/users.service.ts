@@ -210,4 +210,39 @@ export class UsersService {
       return false;
     }
   }
+
+  // Register FCM token for push notifications
+  async registerFcmToken(
+    walletAddress: string,
+    fcmToken: string,
+  ): Promise<{ message: string }> {
+    // Add token to user's fcmTokens array (if not already present)
+    await this.userModel.findOneAndUpdate(
+      { walletAddress },
+      { $addToSet: { fcmTokens: fcmToken } }, // $addToSet prevents duplicates
+    );
+
+    return { message: 'FCM token registered successfully' };
+  }
+
+  // Unregister FCM token
+  async unregisterFcmToken(
+    walletAddress: string,
+    fcmToken: string,
+  ): Promise<{ message: string }> {
+    // Remove token from user's fcmTokens array
+    await this.userModel.findOneAndUpdate(
+      { walletAddress },
+      { $pull: { fcmTokens: fcmToken } },
+    );
+
+    return { message: 'FCM token unregistered successfully' };
+  }
+
+  // Get user's FCM tokens
+  async getFcmTokens(walletAddress: string): Promise<string[]> {
+    const user = await this.userModel.findOne({ walletAddress }).select('fcmTokens');
+    return user?.fcmTokens || [];
+  }
 }
+

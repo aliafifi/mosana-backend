@@ -1,6 +1,7 @@
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { SetNftPfpDto } from './dto/set-nft-pfp.dto';
+import { RegisterFcmTokenDto } from './dto/register-fcm-token.dto';
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
@@ -11,6 +12,12 @@ export declare class UsersController {
         message: string;
     }>;
     unfollowUser(req: any, walletAddress: string): Promise<{
+        message: string;
+    }>;
+    registerFcmToken(req: any, registerFcmTokenDto: RegisterFcmTokenDto): Promise<{
+        message: string;
+    }>;
+    unregisterFcmToken(req: any, registerFcmTokenDto: RegisterFcmTokenDto): Promise<{
         message: string;
     }>;
     getUserProfile(walletAddress: string): Promise<import("./user.schema").User>;

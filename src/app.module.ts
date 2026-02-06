@@ -17,6 +17,7 @@ import { ReputationModule } from './reputation/reputation.module';
 import { VerificationModule } from './verification/verification.module';
 import { ExportModule } from './export/export.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { FirebaseModule } from './firebase/firebase.module';
 
 
 @Module({
@@ -37,6 +38,9 @@ import { NotificationsModule } from './notifications/notifications.module';
         limit: 100, // 100 requests per minute
       },
     ]),
+
+    // Firebase (push notifications)
+    FirebaseModule,
 
     // Feature modules
     AuthModule,

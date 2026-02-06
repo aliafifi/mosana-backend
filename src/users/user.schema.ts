@@ -46,6 +46,10 @@ export class User {
 
   @Prop({ default: Date.now })
   lastLogin: Date;
+
+  // Firebase Cloud Messaging tokens for push notifications
+  @Prop({ type: [String], default: [] })
+  fcmTokens: string[]; // User can have multiple devices
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -26,6 +26,7 @@ const reputation_module_1 = require("./reputation/reputation.module");
 const verification_module_1 = require("./verification/verification.module");
 const export_module_1 = require("./export/export.module");
 const notifications_module_1 = require("./notifications/notifications.module");
+const firebase_module_1 = require("./firebase/firebase.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -43,6 +44,7 @@ exports.AppModule = AppModule = __decorate([
                     limit: 100,
                 },
             ]),
+            firebase_module_1.FirebaseModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             posts_module_1.PostsModule,

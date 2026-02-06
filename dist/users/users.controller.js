@@ -18,6 +18,7 @@ const users_service_1 = require("./users.service");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const update_profile_dto_1 = require("./dto/update-profile.dto");
 const set_nft_pfp_dto_1 = require("./dto/set-nft-pfp.dto");
+const register_fcm_token_dto_1 = require("./dto/register-fcm-token.dto");
 let UsersController = class UsersController {
     usersService;
     constructor(usersService) {
@@ -37,6 +38,12 @@ let UsersController = class UsersController {
     }
     async unfollowUser(req, walletAddress) {
         return this.usersService.unfollowUser(req.user.walletAddress, walletAddress);
+    }
+    async registerFcmToken(req, registerFcmTokenDto) {
+        return this.usersService.registerFcmToken(req.user.walletAddress, registerFcmTokenDto.fcmToken);
+    }
+    async unregisterFcmToken(req, registerFcmTokenDto) {
+        return this.usersService.unregisterFcmToken(req.user.walletAddress, registerFcmTokenDto.fcmToken);
     }
     async getUserProfile(walletAddress) {
         return this.usersService.findByWallet(walletAddress);
@@ -88,6 +95,25 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "unfollowUser", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('fcm-token'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, register_fcm_token_dto_1.RegisterFcmTokenDto]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "registerFcmToken", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Delete)('fcm-token'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, register_fcm_token_dto_1.RegisterFcmTokenDto]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "unregisterFcmToken", null);
 __decorate([
     (0, common_1.Get)(':walletAddress'),
     __param(0, (0, common_1.Param)('walletAddress')),
