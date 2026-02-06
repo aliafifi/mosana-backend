@@ -18,12 +18,16 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const post_schema_1 = require("./post.schema");
 const reputation_service_1 = require("../reputation/reputation.service");
+const notifications_service_1 = require("../notifications/notifications.service");
+const notification_schema_1 = require("../notifications/schemas/notification.schema");
 let PostsService = class PostsService {
     postModel;
     reputationService;
-    constructor(postModel, reputationService) {
+    notificationsService;
+    constructor(postModel, reputationService, notificationsService) {
         this.postModel = postModel;
         this.reputationService = reputationService;
+        this.notificationsService = notificationsService;
     }
     async create(walletAddress, createPostDto) {
         const post = await this.postModel.create({
@@ -126,6 +130,23 @@ let PostsService = class PostsService {
         catch (error) {
             console.log('Reputation update failed:', error.message);
         }
+        if (updatedPost.walletAddress !== walletAddress) {
+            try {
+                await this.notificationsService.createNotification({
+                    recipientWallet: updatedPost.walletAddress,
+                    actorWallet: walletAddress,
+                    type: notification_schema_1.NotificationType.POST_LIKED,
+                    title: 'New like on your post!',
+                    message: `@${walletAddress.slice(0, 8)}... liked your post`,
+                    data: { postId: updatedPost._id.toString() },
+                    actionUrl: `mosana://post/${updatedPost._id}`,
+                    priority: 'normal',
+                });
+            }
+            catch (error) {
+                console.log('Notification creation failed:', error.message);
+            }
+        }
         return updatedPost;
     }
     async unlikePost(postId, walletAddress) {
@@ -180,6 +201,26 @@ let PostsService = class PostsService {
         catch (error) {
             console.log('Reputation update failed:', error.message);
         }
+        if (updatedPost.walletAddress !== walletAddress) {
+            try {
+                await this.notificationsService.createNotification({
+                    recipientWallet: updatedPost.walletAddress,
+                    actorWallet: walletAddress,
+                    type: notification_schema_1.NotificationType.POST_COMMENTED,
+                    title: 'New comment on your post!',
+                    message: `@${walletAddress.slice(0, 8)}... commented: "${createCommentDto.content.slice(0, 50)}${createCommentDto.content.length > 50 ? '...' : ''}"`,
+                    data: {
+                        postId: updatedPost._id.toString(),
+                        commentId: comment._id.toString(),
+                    },
+                    actionUrl: `mosana://post/${updatedPost._id}#comment-${comment._id}`,
+                    priority: 'normal',
+                });
+            }
+            catch (error) {
+                console.log('Notification creation failed:', error.message);
+            }
+        }
         return updatedPost;
     }
     async delete(postId, walletAddress) {
@@ -228,6 +269,7 @@ exports.PostsService = PostsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(post_schema_1.Post.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        reputation_service_1.ReputationService])
+        reputation_service_1.ReputationService,
+        notifications_service_1.NotificationsService])
 ], PostsService);
 //# sourceMappingURL=posts.service.js.map

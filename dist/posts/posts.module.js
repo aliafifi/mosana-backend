@@ -14,6 +14,7 @@ const posts_service_1 = require("./posts.service");
 const post_schema_1 = require("./post.schema");
 const auth_module_1 = require("../auth/auth.module");
 const reputation_module_1 = require("../reputation/reputation.module");
+const notifications_module_1 = require("../notifications/notifications.module");
 let PostsModule = class PostsModule {
 };
 exports.PostsModule = PostsModule;
@@ -23,6 +24,7 @@ exports.PostsModule = PostsModule = __decorate([
             mongoose_1.MongooseModule.forFeature([{ name: post_schema_1.Post.name, schema: post_schema_1.PostSchema }]),
             auth_module_1.AuthModule,
             reputation_module_1.ReputationModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [posts_controller_1.PostsController],
         providers: [posts_service_1.PostsService],

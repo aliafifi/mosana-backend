@@ -5,12 +5,15 @@ import { Post, PostDocument } from './post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { ReputationService } from '../reputation/reputation.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/schemas/notification.schema';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     private reputationService: ReputationService,
+    private notificationsService: NotificationsService,
   ) {}
 
   // Create a new post
@@ -161,6 +164,24 @@ export class PostsService {
       console.log('Reputation update failed:', error.message);
     }
 
+    // Send notification to post author (don't notify if user likes their own post)
+    if (updatedPost.walletAddress !== walletAddress) {
+      try {
+        await this.notificationsService.createNotification({
+          recipientWallet: updatedPost.walletAddress,
+          actorWallet: walletAddress,
+          type: NotificationType.POST_LIKED,
+          title: 'New like on your post!',
+          message: `@${walletAddress.slice(0, 8)}... liked your post`,
+          data: { postId: updatedPost._id.toString() },
+          actionUrl: `mosana://post/${updatedPost._id}`,
+          priority: 'normal',
+        });
+      } catch (error) {
+        console.log('Notification creation failed:', error.message);
+      }
+    }
+
     return updatedPost;
   }
 
@@ -247,6 +268,27 @@ export class PostsService {
     } catch (error) {
       // Silently fail - don't block commenting if reputation update fails
       console.log('Reputation update failed:', error.message);
+    }
+
+    // Send notification to post author (don't notify if user comments on own post)
+    if (updatedPost.walletAddress !== walletAddress) {
+      try {
+        await this.notificationsService.createNotification({
+          recipientWallet: updatedPost.walletAddress,
+          actorWallet: walletAddress,
+          type: NotificationType.POST_COMMENTED,
+          title: 'New comment on your post!',
+          message: `@${walletAddress.slice(0, 8)}... commented: "${createCommentDto.content.slice(0, 50)}${createCommentDto.content.length > 50 ? '...' : ''}"`,
+          data: { 
+            postId: updatedPost._id.toString(),
+            commentId: comment._id.toString(),
+          },
+          actionUrl: `mosana://post/${updatedPost._id}#comment-${comment._id}`,
+          priority: 'normal',
+        });
+      } catch (error) {
+        console.log('Notification creation failed:', error.message);
+      }
     }
 
     return updatedPost;
