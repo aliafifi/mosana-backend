@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Notification, NotificationDocument, NotificationType } from './schemas/notification.schema';
 import { NotificationPreferences, NotificationPreferencesDocument } from './schemas/notification-preferences.schema';
+import { NotificationsGateway } from './notifications.gateway';
 
 @Injectable()
 export class NotificationsService {
@@ -11,6 +12,8 @@ export class NotificationsService {
     private notificationModel: Model<NotificationDocument>,
     @InjectModel(NotificationPreferences.name)
     private preferencesModel: Model<NotificationPreferencesDocument>,
+    @Inject(forwardRef(() => NotificationsGateway))
+    private notificationsGateway: NotificationsGateway,
   ) {}
 
   /**
@@ -39,7 +42,22 @@ export class NotificationsService {
     const notification = new this.notificationModel(data);
     await notification.save();
 
-    // TODO: Emit WebSocket event for real-time delivery (Step 4)
+    // Send real-time notification via WebSocket
+    try {
+      this.notificationsGateway.sendNotificationToUser(data.recipientWallet, {
+        id: notification._id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        data: notification.data,
+        actionUrl: notification.actionUrl,
+        priority: notification.priority,
+        createdAt: new Date(),
+      });
+    } catch (error) {
+      console.log('WebSocket delivery failed (user offline):', error.message);
+    }
+
     // TODO: Send push notification if enabled (Step 7)
 
     return notification;
