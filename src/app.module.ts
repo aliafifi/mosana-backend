@@ -16,6 +16,7 @@ import { DaoModule } from './dao/dao.module';
 import { ReputationModule } from './reputation/reputation.module';
 import { VerificationModule } from './verification/verification.module';
 import { ExportModule } from './export/export.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 
 @Module({
@@ -50,6 +51,7 @@ import { ExportModule } from './export/export.module';
     ReputationModule,
     VerificationModule,
     ExportModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

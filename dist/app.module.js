@@ -25,6 +25,7 @@ const dao_module_1 = require("./dao/dao.module");
 const reputation_module_1 = require("./reputation/reputation.module");
 const verification_module_1 = require("./verification/verification.module");
 const export_module_1 = require("./export/export.module");
+const notifications_module_1 = require("./notifications/notifications.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -54,6 +55,7 @@ exports.AppModule = AppModule = __decorate([
             reputation_module_1.ReputationModule,
             verification_module_1.VerificationModule,
             export_module_1.ExportModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
