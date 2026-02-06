@@ -3,13 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { Tip, TipDocument } from './tip.schema';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { ReputationService } from '../reputation/reputation.service';
+import { NotificationsService } from '../notifications/notifications.service';
 export declare class TippingService {
     private tipModel;
     private configService;
     private reputationService;
+    private notificationsService;
     private readonly logger;
     private solanaConnection;
-    constructor(tipModel: Model<TipDocument>, configService: ConfigService, reputationService: ReputationService);
+    constructor(tipModel: Model<TipDocument>, configService: ConfigService, reputationService: ReputationService, notificationsService: NotificationsService);
     createTip(fromWallet: string, createTipDto: CreateTipDto): Promise<Tip>;
     getSentTips(walletAddress: string, page?: number, limit?: number): Promise<{
         totalSent: any;

@@ -683,16 +683,48 @@ WebSocket Features:
   • Real-time delivery when user online
   • Fallback to DB storage if offline
 
+STEP 5 COMPLETED (2026-02-06):
+  ✅ Integrated notifications with Tipping Module
+  ✅ Integrated notifications with Users Module (follows)
+  ✅ Added NotificationType.TIP_RECEIVED trigger
+  ✅ Added NotificationType.FOLLOW_NEW trigger
+  ✅ Smart priority: tips >= 10 USDC = high priority
+  ✅ Rich notification data (amount, currency, tipId)
+  ✅ Deep links to relevant content
+  ✅ Silent failure (doesn't block core actions)
+  ✅ Built and deployed successfully
+
+Tipping Integration:
+  • Trigger: When user receives a tip
+  • Notification: "💰 You received a tip!"
+  • Message: "@username... tipped you X USDC"
+  • Priority: High if >= 10 USDC, normal otherwise
+  • Deep link: mosana://post/:id or mosana://profile/:wallet
+  • Data: tipId, amount, currency, postId, commentId, message
+
+Follow Integration:
+  • Trigger: When user gets a new follower
+  • Notification: "👤 New follower!"
+  • Message: "@username... started following you"
+  • Priority: Normal
+  • Deep link: mosana://profile/:followerWallet
+  • Data: followerWallet
+
+Files Modified:
+  • src/tipping/tipping.module.ts (added NotificationsModule)
+  • src/tipping/tipping.service.ts (added notification trigger)
+  • src/users/users.module.ts (added NotificationsModule)
+  • src/users/users.service.ts (added notification trigger)
+
 NEXT STEPS:
-  ⏭️  Step 5: Integration with remaining modules (Tips, Follows) (Day 4-5)
-  ⏭️  Step 6: Notification preferences testing (Day 6)
+  ⏭️  Step 6: Notification preferences testing & UI (Day 6)
   ⏭️  Step 7: Firebase Cloud Messaging (Push) (Day 7)
   ⏭️  Step 8: Final testing & Documentation (Day 7)
 
-Testing Status:  ✅ WebSocket Ready
-Estimated Time:  ⏳ 1-1.5 weeks total (Steps 1-4 done ~2.5 hours)
-Status:          🚧 IN PROGRESS - Step 4/8 Complete ✅
-Endpoints:       7 REST + 1 WebSocket
+Testing Status:  ✅ 4 Notification Types Active (Likes, Comments, Tips, Follows)
+Estimated Time:  ⏳ 1-1.5 weeks total (Steps 1-5 done ~3 hours)
+Status:          🚧 IN PROGRESS - Step 5/8 Complete ✅
+Endpoints:       7 REST + 1 WebSocket + 4 Triggers
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⏸️  DEFERRED FEATURE (14) - POST-LAUNCH

@@ -15,6 +15,7 @@ const tipping_service_1 = require("./tipping.service");
 const tip_schema_1 = require("./tip.schema");
 const auth_module_1 = require("../auth/auth.module");
 const reputation_module_1 = require("../reputation/reputation.module");
+const notifications_module_1 = require("../notifications/notifications.module");
 let TippingModule = class TippingModule {
 };
 exports.TippingModule = TippingModule;
@@ -25,6 +26,7 @@ exports.TippingModule = TippingModule = __decorate([
             config_1.ConfigModule,
             auth_module_1.AuthModule,
             reputation_module_1.ReputationModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [tipping_controller_1.TippingController],
         providers: [tipping_service_1.TippingService],

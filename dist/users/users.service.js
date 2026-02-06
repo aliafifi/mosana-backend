@@ -19,13 +19,17 @@ const mongoose_2 = require("mongoose");
 const web3_js_1 = require("@solana/web3.js");
 const config_1 = require("@nestjs/config");
 const user_schema_1 = require("./user.schema");
+const notifications_service_1 = require("../notifications/notifications.service");
+const notification_schema_1 = require("../notifications/schemas/notification.schema");
 let UsersService = class UsersService {
     userModel;
     configService;
+    notificationsService;
     solanaConnection;
-    constructor(userModel, configService) {
+    constructor(userModel, configService, notificationsService) {
         this.userModel = userModel;
         this.configService = configService;
+        this.notificationsService = notificationsService;
         const rpcUrl = this.configService.get('SOLANA_RPC_URL');
         this.solanaConnection = new web3_js_1.Connection(rpcUrl || 'https://api.devnet.solana.com');
     }
@@ -84,6 +88,23 @@ let UsersService = class UsersService {
             $inc: { followingCount: 1 },
         });
         await this.userModel.findOneAndUpdate({ walletAddress: followingWallet }, { $inc: { followersCount: 1 } });
+        try {
+            await this.notificationsService.createNotification({
+                recipientWallet: followingWallet,
+                actorWallet: followerWallet,
+                type: notification_schema_1.NotificationType.FOLLOW_NEW,
+                title: 'New follower!',
+                message: `@${followerWallet.slice(0, 8)}... started following you`,
+                data: {
+                    followerWallet,
+                },
+                actionUrl: `mosana://profile/${followerWallet}`,
+                priority: 'normal',
+            });
+        }
+        catch (error) {
+            console.warn(`Notification failed for follow: ${error.message}`);
+        }
         return { message: 'Successfully followed user' };
     }
     async unfollowUser(followerWallet, followingWallet) {
@@ -117,6 +138,7 @@ exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        notifications_service_1.NotificationsService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

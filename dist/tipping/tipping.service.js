@@ -22,16 +22,20 @@ const web3_js_1 = require("@solana/web3.js");
 const tip_schema_1 = require("./tip.schema");
 const tipping_config_1 = require("./tipping.config");
 const reputation_service_1 = require("../reputation/reputation.service");
+const notifications_service_1 = require("../notifications/notifications.service");
+const notification_schema_1 = require("../notifications/schemas/notification.schema");
 let TippingService = TippingService_1 = class TippingService {
     tipModel;
     configService;
     reputationService;
+    notificationsService;
     logger = new common_1.Logger(TippingService_1.name);
     solanaConnection;
-    constructor(tipModel, configService, reputationService) {
+    constructor(tipModel, configService, reputationService, notificationsService) {
         this.tipModel = tipModel;
         this.configService = configService;
         this.reputationService = reputationService;
+        this.notificationsService = notificationsService;
         const rpcUrl = this.configService.get('SOLANA_RPC_URL');
         this.solanaConnection = new web3_js_1.Connection(rpcUrl || 'https://api.devnet.solana.com');
     }
@@ -78,6 +82,30 @@ let TippingService = TippingService_1 = class TippingService {
         }
         catch (error) {
             this.logger.warn(`Reputation update failed for receiver ${toWallet}: ${error.message}`);
+        }
+        try {
+            if (fromWallet !== toWallet) {
+                await this.notificationsService.createNotification({
+                    recipientWallet: toWallet,
+                    actorWallet: fromWallet,
+                    type: notification_schema_1.NotificationType.TIP_RECEIVED,
+                    title: 'You received a tip!',
+                    message: `@${fromWallet.slice(0, 8)}... tipped you ${amount} ${currency}`,
+                    data: {
+                        tipId: tip._id.toString(),
+                        amount,
+                        currency,
+                        postId: postId || null,
+                        commentId: commentId || null,
+                        message: message || null,
+                    },
+                    actionUrl: postId ? `mosana://post/${postId}` : `mosana://profile/${fromWallet}`,
+                    priority: amount >= 10 ? 'high' : 'normal',
+                });
+            }
+        }
+        catch (error) {
+            this.logger.warn(`Notification failed for tip: ${error.message}`);
         }
         return tip;
     }
@@ -227,6 +255,7 @@ exports.TippingService = TippingService = TippingService_1 = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(tip_schema_1.Tip.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         config_1.ConfigService,
-        reputation_service_1.ReputationService])
+        reputation_service_1.ReputationService,
+        notifications_service_1.NotificationsService])
 ], TippingService);
 //# sourceMappingURL=tipping.service.js.map

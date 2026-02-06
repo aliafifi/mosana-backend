@@ -6,6 +6,8 @@ import { ConfigService } from '@nestjs/config';
 import { User, UserDocument } from './user.schema';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { SetNftPfpDto } from './dto/set-nft-pfp.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/schemas/notification.schema';
 
 @Injectable()
 export class UsersService {
@@ -14,6 +16,7 @@ export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private configService: ConfigService,
+    private notificationsService: NotificationsService,
   ) {
     // Initialize Solana connection
     const rpcUrl = this.configService.get<string>('SOLANA_RPC_URL');
@@ -131,6 +134,25 @@ export class UsersService {
       { walletAddress: followingWallet },
       { $inc: { followersCount: 1 } },
     );
+
+    // 🔔 NOTIFICATION: Notify the followed user
+    try {
+      await this.notificationsService.createNotification({
+        recipientWallet: followingWallet,
+        actorWallet: followerWallet,
+        type: NotificationType.FOLLOW_NEW,
+        title: 'New follower!',
+        message: `@${followerWallet.slice(0, 8)}... started following you`,
+        data: {
+          followerWallet,
+        },
+        actionUrl: `mosana://profile/${followerWallet}`,
+        priority: 'normal',
+      });
+    } catch (error) {
+      // Silently fail - don't block following if notification fails
+      console.warn(`Notification failed for follow: ${error.message}`);
+    }
 
     return { message: 'Successfully followed user' };
   }

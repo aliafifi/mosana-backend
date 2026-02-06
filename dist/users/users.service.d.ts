@@ -3,11 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { User, UserDocument } from './user.schema';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { SetNftPfpDto } from './dto/set-nft-pfp.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 export declare class UsersService {
     private userModel;
     private configService;
+    private notificationsService;
     private solanaConnection;
-    constructor(userModel: Model<UserDocument>, configService: ConfigService);
+    constructor(userModel: Model<UserDocument>, configService: ConfigService, notificationsService: NotificationsService);
     findByWallet(walletAddress: string): Promise<User>;
     updateProfile(walletAddress: string, updateProfileDto: UpdateProfileDto): Promise<User>;
     setNftProfilePicture(walletAddress: string, setNftPfpDto: SetNftPfpDto): Promise<User>;

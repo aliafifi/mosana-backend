@@ -14,6 +14,7 @@ const users_controller_1 = require("./users.controller");
 const users_service_1 = require("./users.service");
 const user_schema_1 = require("./user.schema");
 const auth_module_1 = require("../auth/auth.module");
+const notifications_module_1 = require("../notifications/notifications.module");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
@@ -23,6 +24,7 @@ exports.UsersModule = UsersModule = __decorate([
             mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }]),
             config_1.ConfigModule,
             auth_module_1.AuthModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [users_controller_1.UsersController],
         providers: [users_service_1.UsersService],

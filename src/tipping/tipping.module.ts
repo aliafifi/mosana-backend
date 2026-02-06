@@ -6,6 +6,7 @@ import { TippingService } from './tipping.service';
 import { Tip, TipSchema } from './tip.schema';
 import { AuthModule } from '../auth/auth.module';
 import { ReputationModule } from '../reputation/reputation.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ReputationModule } from '../reputation/reputation.module';
     ConfigModule,
     AuthModule,
     ReputationModule,
+    NotificationsModule,
   ],
   controllers: [TippingController],
   providers: [TippingService],

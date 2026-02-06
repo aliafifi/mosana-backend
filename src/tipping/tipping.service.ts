@@ -7,6 +7,8 @@ import { Tip, TipDocument } from './tip.schema';
 import { CreateTipDto } from './dto/create-tip.dto';
 import { TIPPING_CONFIG } from './tipping.config';
 import { ReputationService } from '../reputation/reputation.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/schemas/notification.schema';
 
 @Injectable()
 export class TippingService {
@@ -17,6 +19,7 @@ export class TippingService {
     @InjectModel(Tip.name) private tipModel: Model<TipDocument>,
     private configService: ConfigService,
     private reputationService: ReputationService,
+    private notificationsService: NotificationsService,
   ) {
     const rpcUrl = this.configService.get<string>('SOLANA_RPC_URL');
     this.solanaConnection = new Connection(rpcUrl || 'https://api.devnet.solana.com');
@@ -91,6 +94,33 @@ export class TippingService {
     } catch (error) {
       // Silently fail - don't block tipping if reputation update fails
       this.logger.warn(`Reputation update failed for receiver ${toWallet}: ${error.message}`);
+    }
+
+    // 🔔 NOTIFICATION: Notify receiver they got a tip
+    try {
+      // Don't notify if user tipped themselves (already blocked, but defensive)
+      if (fromWallet !== toWallet) {
+        await this.notificationsService.createNotification({
+          recipientWallet: toWallet,
+          actorWallet: fromWallet,
+          type: NotificationType.TIP_RECEIVED,
+          title: 'You received a tip!',
+          message: `@${fromWallet.slice(0, 8)}... tipped you ${amount} ${currency}`,
+          data: {
+            tipId: tip._id.toString(),
+            amount,
+            currency,
+            postId: postId || null,
+            commentId: commentId || null,
+            message: message || null,
+          },
+          actionUrl: postId ? `mosana://post/${postId}` : `mosana://profile/${fromWallet}`,
+          priority: amount >= 10 ? 'high' : 'normal', // High priority for tips >= 10 USDC
+        });
+      }
+    } catch (error) {
+      // Silently fail - don't block tipping if notification fails
+      this.logger.warn(`Notification failed for tip: ${error.message}`);
     }
 
     // TODO: Actually burn tokens (implement token burn function)
