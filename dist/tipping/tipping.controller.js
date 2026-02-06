@@ -34,6 +34,9 @@ let TippingController = class TippingController {
     async getPostTips(postId) {
         return this.tippingService.getPostTips(postId);
     }
+    async getUserStats(req) {
+        return this.tippingService.getUserStats(req.user.walletAddress);
+    }
     async getPlatformStats() {
         return this.tippingService.getPlatformStats();
     }
@@ -101,7 +104,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], TippingController.prototype, "getPostTips", null);
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)('stats'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TippingController.prototype, "getUserStats", null);
+__decorate([
+    (0, common_1.Get)('stats/platform'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)

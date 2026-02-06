@@ -2,11 +2,13 @@ import { Model } from 'mongoose';
 import { CauseDocument } from './schemas/cause.schema';
 import { DonationDocument } from './schemas/donation.schema';
 import { CreateCauseDto } from './dto/create-cause.dto';
+import { ReputationService } from '../reputation/reputation.service';
 export declare class SocialGoodService {
     private causeModel;
     private donationModel;
+    private reputationService;
     private readonly logger;
-    constructor(causeModel: Model<CauseDocument>, donationModel: Model<DonationDocument>);
+    constructor(causeModel: Model<CauseDocument>, donationModel: Model<DonationDocument>, reputationService: ReputationService);
     createCause(createCauseDto: CreateCauseDto): Promise<CauseDocument>;
     getAllCauses(category?: string): Promise<CauseDocument[]>;
     getCauseById(causeId: string): Promise<CauseDocument>;

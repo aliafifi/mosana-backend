@@ -26,9 +26,6 @@ let UsersController = class UsersController {
     async getMyProfile(req) {
         return this.usersService.findByWallet(req.user.walletAddress);
     }
-    async getUserProfile(walletAddress) {
-        return this.usersService.findByWallet(walletAddress);
-    }
     async updateProfile(req, updateProfileDto) {
         return this.usersService.updateProfile(req.user.walletAddress, updateProfileDto);
     }
@@ -41,6 +38,9 @@ let UsersController = class UsersController {
     async unfollowUser(req, walletAddress) {
         return this.usersService.unfollowUser(req.user.walletAddress, walletAddress);
     }
+    async getUserProfile(walletAddress) {
+        return this.usersService.findByWallet(walletAddress);
+    }
 };
 exports.UsersController = UsersController;
 __decorate([
@@ -51,13 +51,6 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getMyProfile", null);
-__decorate([
-    (0, common_1.Get)(':walletAddress'),
-    __param(0, (0, common_1.Param)('walletAddress')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], UsersController.prototype, "getUserProfile", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Put)('profile'),
@@ -95,6 +88,13 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "unfollowUser", null);
+__decorate([
+    (0, common_1.Get)(':walletAddress'),
+    __param(0, (0, common_1.Param)('walletAddress')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getUserProfile", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [users_service_1.UsersService])

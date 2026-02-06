@@ -16,6 +16,7 @@ exports.VenturesController = void 0;
 const common_1 = require("@nestjs/common");
 const ventures_service_1 = require("./ventures.service");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const mongodb_id_pipe_1 = require("../common/pipes/mongodb-id.pipe");
 const create_venture_dto_1 = require("./dto/create-venture.dto");
 let VenturesController = class VenturesController {
     venturesService;
@@ -91,6 +92,13 @@ let VenturesController = class VenturesController {
             data: earnings,
         };
     }
+    async getUserVentureStats(req) {
+        const stats = await this.venturesService.getUserVentureStats(req.user.walletAddress);
+        return {
+            success: true,
+            data: stats,
+        };
+    }
     async getVentureStats() {
         const stats = await this.venturesService.getVentureStats();
         return {
@@ -113,7 +121,7 @@ __decorate([
 __decorate([
     (0, common_1.Put)(':ventureId/accept'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('ventureId')),
+    __param(0, (0, common_1.Param)('ventureId', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
@@ -122,7 +130,7 @@ __decorate([
 __decorate([
     (0, common_1.Put)(':ventureId/reject'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('ventureId')),
+    __param(0, (0, common_1.Param)('ventureId', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
@@ -153,7 +161,7 @@ __decorate([
 ], VenturesController.prototype, "getPendingInvitations", null);
 __decorate([
     (0, common_1.Get)(':ventureId/splits'),
-    __param(0, (0, common_1.Param)('ventureId')),
+    __param(0, (0, common_1.Param)('ventureId', mongodb_id_pipe_1.MongoIdPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
@@ -168,6 +176,14 @@ __decorate([
 ], VenturesController.prototype, "getMyEarnings", null);
 __decorate([
     (0, common_1.Get)('stats'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], VenturesController.prototype, "getUserVentureStats", null);
+__decorate([
+    (0, common_1.Get)('stats/platform'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)

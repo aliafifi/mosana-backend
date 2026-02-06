@@ -19,13 +19,16 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const venture_schema_1 = require("./schemas/venture.schema");
 const revenue_split_schema_1 = require("./schemas/revenue-split.schema");
+const reputation_service_1 = require("../reputation/reputation.service");
 let VenturesService = VenturesService_1 = class VenturesService {
     ventureModel;
     revenueSplitModel;
+    reputationService;
     logger = new common_1.Logger(VenturesService_1.name);
-    constructor(ventureModel, revenueSplitModel) {
+    constructor(ventureModel, revenueSplitModel, reputationService) {
         this.ventureModel = ventureModel;
         this.revenueSplitModel = revenueSplitModel;
+        this.reputationService = reputationService;
     }
     async createVenture(createVentureDto, initiatorWallet) {
         const totalShares = createVentureDto.collaborators.reduce((sum, collab) => sum + collab.sharePercentage, 0);
@@ -57,6 +60,14 @@ let VenturesService = VenturesService_1 = class VenturesService {
             status: 'pending',
         });
         await venture.save();
+        try {
+            await this.reputationService.updateMetrics(initiatorWallet, {
+                venturesJoined: 1,
+            });
+        }
+        catch (error) {
+            this.logger.warn(`Reputation update failed for ${initiatorWallet}: ${error.message}`);
+        }
         this.logger.log(`Venture created for post ${createVentureDto.postId} by ${initiatorWallet}`);
         return venture;
     }
@@ -79,6 +90,14 @@ let VenturesService = VenturesService_1 = class VenturesService {
             this.logger.log(`Venture ${ventureId} is now active - all collaborators accepted`);
         }
         await venture.save();
+        try {
+            await this.reputationService.updateMetrics(walletAddress, {
+                venturesJoined: 1,
+            });
+        }
+        catch (error) {
+            this.logger.warn(`Reputation update failed for ${walletAddress}: ${error.message}`);
+        }
         return venture;
     }
     async rejectVenture(ventureId, walletAddress) {
@@ -172,6 +191,36 @@ let VenturesService = VenturesService_1 = class VenturesService {
             totalSplits: splits.length,
         };
     }
+    async getUserVentureStats(walletAddress) {
+        const userVentures = await this.ventureModel.find({
+            'collaborators.walletAddress': walletAddress,
+        });
+        const venturesByStatus = {
+            active: userVentures.filter(v => v.status === 'active').length,
+            pending: userVentures.filter(v => v.status === 'pending').length,
+            rejected: userVentures.filter(v => v.status === 'rejected').length,
+        };
+        const earnings = await this.getUserVentureEarnings(walletAddress);
+        const shareInfo = userVentures.map(venture => {
+            const collaborator = venture.collaborators.find(c => c.walletAddress === walletAddress);
+            return {
+                ventureId: venture._id,
+                postId: venture.postId,
+                status: venture.status,
+                myShare: collaborator?.sharePercentage || 0,
+                totalRevenue: venture.totalRevenueGenerated,
+            };
+        });
+        return {
+            walletAddress,
+            summary: {
+                totalVentures: userVentures.length,
+                ...venturesByStatus,
+            },
+            earnings,
+            ventures: shareInfo,
+        };
+    }
     async getVentureStats() {
         const totalVentures = await this.ventureModel.countDocuments();
         const activeVentures = await this.ventureModel.countDocuments({ status: 'active' });
@@ -200,6 +249,7 @@ exports.VenturesService = VenturesService = VenturesService_1 = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(venture_schema_1.Venture.name)),
     __param(1, (0, mongoose_1.InjectModel)(revenue_split_schema_1.RevenueSplit.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        reputation_service_1.ReputationService])
 ], VenturesService);
 //# sourceMappingURL=ventures.service.js.map

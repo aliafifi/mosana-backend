@@ -21,14 +21,17 @@ const config_1 = require("@nestjs/config");
 const web3_js_1 = require("@solana/web3.js");
 const tip_schema_1 = require("./tip.schema");
 const tipping_config_1 = require("./tipping.config");
+const reputation_service_1 = require("../reputation/reputation.service");
 let TippingService = TippingService_1 = class TippingService {
     tipModel;
     configService;
+    reputationService;
     logger = new common_1.Logger(TippingService_1.name);
     solanaConnection;
-    constructor(tipModel, configService) {
+    constructor(tipModel, configService, reputationService) {
         this.tipModel = tipModel;
         this.configService = configService;
+        this.reputationService = reputationService;
         const rpcUrl = this.configService.get('SOLANA_RPC_URL');
         this.solanaConnection = new web3_js_1.Connection(rpcUrl || 'https://api.devnet.solana.com');
     }
@@ -60,6 +63,22 @@ let TippingService = TippingService_1 = class TippingService {
             status: 'completed',
             tippedAt: new Date(),
         });
+        try {
+            await this.reputationService.updateMetrics(fromWallet, {
+                tipsSent: amount,
+            });
+        }
+        catch (error) {
+            this.logger.warn(`Reputation update failed for sender ${fromWallet}: ${error.message}`);
+        }
+        try {
+            await this.reputationService.updateMetrics(toWallet, {
+                tipsReceived: amount,
+            });
+        }
+        catch (error) {
+            this.logger.warn(`Reputation update failed for receiver ${toWallet}: ${error.message}`);
+        }
         return tip;
     }
     async getSentTips(walletAddress, page = 1, limit = 30) {
@@ -110,6 +129,46 @@ let TippingService = TippingService_1 = class TippingService {
             totalTipped,
             tipsCount: tips.length,
             tips,
+        };
+    }
+    async getUserStats(walletAddress) {
+        const [sentStats, receivedStats] = await Promise.all([
+            this.tipModel.aggregate([
+                { $match: { fromWallet: walletAddress } },
+                {
+                    $group: {
+                        _id: null,
+                        totalSent: { $sum: '$amount' },
+                        totalFeesPaid: { $sum: '$platformFee' },
+                        tipsGiven: { $sum: 1 },
+                    },
+                },
+            ]),
+            this.tipModel.aggregate([
+                { $match: { toWallet: walletAddress } },
+                {
+                    $group: {
+                        _id: null,
+                        totalReceived: { $sum: '$amount' },
+                        tipsReceived: { $sum: 1 },
+                    },
+                },
+            ]),
+        ]);
+        const sent = sentStats[0] || {
+            totalSent: 0,
+            totalFeesPaid: 0,
+            tipsGiven: 0,
+        };
+        const received = receivedStats[0] || {
+            totalReceived: 0,
+            tipsReceived: 0,
+        };
+        return {
+            walletAddress,
+            sent,
+            received,
+            netBalance: received.totalReceived - sent.totalSent,
         };
     }
     async getPlatformStats() {
@@ -167,6 +226,7 @@ exports.TippingService = TippingService = TippingService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(tip_schema_1.Tip.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        reputation_service_1.ReputationService])
 ], TippingService);
 //# sourceMappingURL=tipping.service.js.map

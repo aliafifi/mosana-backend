@@ -4,11 +4,13 @@ import { ProposalDocument } from './schemas/proposal.schema';
 import { CreateDaoDto } from './dto/create-dao.dto';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { CastVoteDto } from './dto/cast-vote.dto';
+import { ReputationService } from '../reputation/reputation.service';
 export declare class DaoService {
     private daoModel;
     private proposalModel;
+    private reputationService;
     private readonly logger;
-    constructor(daoModel: Model<DaoDocument>, proposalModel: Model<ProposalDocument>);
+    constructor(daoModel: Model<DaoDocument>, proposalModel: Model<ProposalDocument>, reputationService: ReputationService);
     createDao(createDaoDto: CreateDaoDto, creatorWallet: string): Promise<DaoDocument>;
     getDaoById(daoId: string): Promise<DaoDocument>;
     getAllDaos(status?: string, sortBy?: string): Promise<DaoDocument[]>;

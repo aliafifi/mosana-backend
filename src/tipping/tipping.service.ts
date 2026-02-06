@@ -171,6 +171,53 @@ export class TippingService {
     };
   }
 
+  // Get user-specific tipping statistics
+  async getUserStats(walletAddress: string) {
+    const [sentStats, receivedStats] = await Promise.all([
+      // Stats for tips sent by user
+      this.tipModel.aggregate([
+        { $match: { fromWallet: walletAddress } },
+        {
+          $group: {
+            _id: null,
+            totalSent: { $sum: '$amount' },
+            totalFeesPaid: { $sum: '$platformFee' },
+            tipsGiven: { $sum: 1 },
+          },
+        },
+      ]),
+      // Stats for tips received by user
+      this.tipModel.aggregate([
+        { $match: { toWallet: walletAddress } },
+        {
+          $group: {
+            _id: null,
+            totalReceived: { $sum: '$amount' },
+            tipsReceived: { $sum: 1 },
+          },
+        },
+      ]),
+    ]);
+
+    const sent = sentStats[0] || {
+      totalSent: 0,
+      totalFeesPaid: 0,
+      tipsGiven: 0,
+    };
+
+    const received = receivedStats[0] || {
+      totalReceived: 0,
+      tipsReceived: 0,
+    };
+
+    return {
+      walletAddress,
+      sent,
+      received,
+      netBalance: received.totalReceived - sent.totalSent,
+    };
+  }
+
   // Get platform statistics (for analytics/transparency)
   async getPlatformStats() {
     const stats = await this.tipModel.aggregate([

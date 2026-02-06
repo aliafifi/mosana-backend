@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { MongoIdPipe } from '../common/pipes/mongodb-id.pipe';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
@@ -65,7 +66,7 @@ export class PostsController {
 
   // Get single post by ID
   @Get(':id')
-  async getPost(@Param('id') id: string) {
+  async getPost(@Param('id', MongoIdPipe) id: string) {
     return this.postsService.findOne(id);
   }
 
@@ -83,14 +84,14 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @Post(':id/like')
   @HttpCode(HttpStatus.OK)
-  async likePost(@Param('id') id: string, @Request() req) {
+  async likePost(@Param('id', MongoIdPipe) id: string, @Request() req) {
     return this.postsService.likePost(id, req.user.walletAddress);
   }
 
   // Unlike a post
   @UseGuards(JwtAuthGuard)
   @Delete(':id/like')
-  async unlikePost(@Param('id') id: string, @Request() req) {
+  async unlikePost(@Param('id', MongoIdPipe) id: string, @Request() req) {
     return this.postsService.unlikePost(id, req.user.walletAddress);
   }
 
@@ -98,7 +99,7 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @Post(':id/comments')
   async addComment(
-    @Param('id') id: string,
+    @Param('id', MongoIdPipe) id: string,
     @Request() req,
     @Body() createCommentDto: CreateCommentDto,
   ) {
@@ -112,7 +113,7 @@ export class PostsController {
   // Delete post
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  async deletePost(@Param('id') id: string, @Request() req) {
+  async deletePost(@Param('id', MongoIdPipe) id: string, @Request() req) {
     return this.postsService.delete(id, req.user.walletAddress);
   }
 }

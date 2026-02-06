@@ -46,6 +46,10 @@ export declare class VenturesController {
         success: boolean;
         data: any;
     }>;
+    getUserVentureStats(req: any): Promise<{
+        success: boolean;
+        data: any;
+    }>;
     getVentureStats(): Promise<{
         success: boolean;
         data: any;

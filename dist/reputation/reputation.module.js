@@ -12,6 +12,7 @@ const mongoose_1 = require("@nestjs/mongoose");
 const reputation_service_1 = require("./reputation.service");
 const reputation_controller_1 = require("./reputation.controller");
 const reputation_schema_1 = require("./schemas/reputation.schema");
+const verification_module_1 = require("../verification/verification.module");
 let ReputationModule = class ReputationModule {
 };
 exports.ReputationModule = ReputationModule;
@@ -21,6 +22,7 @@ exports.ReputationModule = ReputationModule = __decorate([
             mongoose_1.MongooseModule.forFeature([
                 { name: reputation_schema_1.Reputation.name, schema: reputation_schema_1.ReputationSchema },
             ]),
+            verification_module_1.VerificationModule,
         ],
         controllers: [reputation_controller_1.ReputationController],
         providers: [reputation_service_1.ReputationService],

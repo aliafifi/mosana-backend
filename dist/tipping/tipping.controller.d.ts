@@ -35,6 +35,12 @@ export declare class TippingController {
             id: string;
         })[];
     }>;
+    getUserStats(req: any): Promise<{
+        walletAddress: string;
+        sent: any;
+        received: any;
+        netBalance: number;
+    }>;
     getPlatformStats(): Promise<any>;
     getFeePreview(amount: number): Promise<{
         valid: boolean;

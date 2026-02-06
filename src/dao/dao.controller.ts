@@ -18,6 +18,7 @@ import { CreateDaoDto } from './dto/create-dao.dto';
 import { CreateProposalDto } from './dto/create-proposal.dto';
 import { CastVoteDto } from './dto/cast-vote.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { MongoIdPipe } from '../common/pipes/mongodb-id.pipe';
 
 @Controller('dao')
 export class DaoController {
@@ -85,7 +86,7 @@ export class DaoController {
    * Protected: No (public)
    */
   @Get(':daoId')
-  async getDaoById(@Param('daoId') daoId: string) {
+  async getDaoById(@Param('daoId', MongoIdPipe) daoId: string) {
     try {
       const dao = await this.daoService.getDaoById(daoId);
 
@@ -128,7 +129,7 @@ export class DaoController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async joinDao(
-    @Param('daoId') daoId: string,
+    @Param('daoId', MongoIdPipe) daoId: string,
     @Request() req,
   ) {
     try {
@@ -152,7 +153,7 @@ export class DaoController {
   @Delete(':daoId/leave')
   @UseGuards(JwtAuthGuard)
   async leaveDao(
-    @Param('daoId') daoId: string,
+    @Param('daoId', MongoIdPipe) daoId: string,
     @Request() req,
   ) {
     try {
@@ -181,7 +182,7 @@ export class DaoController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
   async createProposal(
-    @Param('daoId') daoId: string,
+    @Param('daoId', MongoIdPipe) daoId: string,
     @Body() createProposalDto: CreateProposalDto,
     @Request() req,
   ) {
@@ -210,7 +211,7 @@ export class DaoController {
    */
   @Get(':daoId/proposals')
   async getDaoProposals(
-    @Param('daoId') daoId: string,
+    @Param('daoId', MongoIdPipe) daoId: string,
     @Query('status') status?: string,
   ) {
     try {
@@ -233,7 +234,7 @@ export class DaoController {
    */
   @Get(':daoId/proposals/:proposalId')
   async getProposalById(
-    @Param('proposalId') proposalId: string,
+    @Param('proposalId', MongoIdPipe) proposalId: string,
   ) {
     try {
       const proposal = await this.daoService.getProposalById(proposalId);
@@ -256,7 +257,7 @@ export class DaoController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async castVote(
-    @Param('proposalId') proposalId: string,
+    @Param('proposalId', MongoIdPipe) proposalId: string,
     @Body() castVoteDto: CastVoteDto,
     @Request() req,
   ) {
@@ -285,7 +286,7 @@ export class DaoController {
   @Get(':daoId/proposals/:proposalId/my-vote')
   @UseGuards(JwtAuthGuard)
   async getMyVote(
-    @Param('proposalId') proposalId: string,
+    @Param('proposalId', MongoIdPipe) proposalId: string,
     @Request() req,
   ) {
     try {

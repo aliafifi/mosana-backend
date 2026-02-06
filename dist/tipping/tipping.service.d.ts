@@ -2,12 +2,14 @@ import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Tip, TipDocument } from './tip.schema';
 import { CreateTipDto } from './dto/create-tip.dto';
+import { ReputationService } from '../reputation/reputation.service';
 export declare class TippingService {
     private tipModel;
     private configService;
+    private reputationService;
     private readonly logger;
     private solanaConnection;
-    constructor(tipModel: Model<TipDocument>, configService: ConfigService);
+    constructor(tipModel: Model<TipDocument>, configService: ConfigService, reputationService: ReputationService);
     createTip(fromWallet: string, createTipDto: CreateTipDto): Promise<Tip>;
     getSentTips(walletAddress: string, page?: number, limit?: number): Promise<{
         totalSent: any;
@@ -39,6 +41,12 @@ export declare class TippingService {
         } & {
             id: string;
         })[];
+    }>;
+    getUserStats(walletAddress: string): Promise<{
+        walletAddress: string;
+        sent: any;
+        received: any;
+        netBalance: number;
     }>;
     getPlatformStats(): Promise<any>;
     calculateFeePreview(amount: number): {

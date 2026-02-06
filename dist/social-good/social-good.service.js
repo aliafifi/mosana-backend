@@ -19,13 +19,16 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const cause_schema_1 = require("./schemas/cause.schema");
 const donation_schema_1 = require("./schemas/donation.schema");
+const reputation_service_1 = require("../reputation/reputation.service");
 let SocialGoodService = SocialGoodService_1 = class SocialGoodService {
     causeModel;
     donationModel;
+    reputationService;
     logger = new common_1.Logger(SocialGoodService_1.name);
-    constructor(causeModel, donationModel) {
+    constructor(causeModel, donationModel, reputationService) {
         this.causeModel = causeModel;
         this.donationModel = donationModel;
+        this.reputationService = reputationService;
     }
     async createCause(createCauseDto) {
         const existingCause = await this.causeModel.findOne({
@@ -80,6 +83,14 @@ let SocialGoodService = SocialGoodService_1 = class SocialGoodService {
         });
         cause.totalDonors = uniqueDonors.length;
         await cause.save();
+        try {
+            await this.reputationService.updateMetrics(donorWallet, {
+                charityDonations: donationAmount,
+            });
+        }
+        catch (error) {
+            this.logger.warn(`Reputation update failed for ${donorWallet}: ${error.message}`);
+        }
         this.logger.log(`Donation processed: ${donorWallet} donated ${donationAmount} (${charityPercentage}%) to ${cause.name} from ${source}`);
         return {
             creatorAmount,
@@ -110,6 +121,14 @@ let SocialGoodService = SocialGoodService_1 = class SocialGoodService {
         });
         cause.totalDonors = uniqueDonors.length;
         await cause.save();
+        try {
+            await this.reputationService.updateMetrics(donorWallet, {
+                charityDonations: amount,
+            });
+        }
+        catch (error) {
+            this.logger.warn(`Reputation update failed for ${donorWallet}: ${error.message}`);
+        }
         this.logger.log(`Direct donation: ${donorWallet} donated ${amount} tokens to ${cause.name}`);
         return donation;
     }
@@ -151,6 +170,7 @@ exports.SocialGoodService = SocialGoodService = SocialGoodService_1 = __decorate
     __param(0, (0, mongoose_1.InjectModel)(cause_schema_1.Cause.name)),
     __param(1, (0, mongoose_1.InjectModel)(donation_schema_1.Donation.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        reputation_service_1.ReputationService])
 ], SocialGoodService);
 //# sourceMappingURL=social-good.service.js.map

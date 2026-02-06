@@ -1,7 +1,8 @@
-import { Controller, Post, Get, Param, Body, UseGuards, Request, HttpCode, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, UseGuards, Request, HttpCode, HttpStatus, Query, NotFoundException, BadRequestException } from '@nestjs/common';
 import { SocialGoodService } from './social-good.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CreateCauseDto } from './dto/create-cause.dto';
+import { Types } from 'mongoose';
 
 @Controller('social-good')
 export class SocialGoodController {
@@ -44,12 +45,27 @@ export class SocialGoodController {
    */
   @Get('causes/:causeId')
   async getCauseById(@Param('causeId') causeId: string) {
-    const cause = await this.socialGoodService.getCauseById(causeId);
+    // Validate MongoDB ObjectId format
+    if (!Types.ObjectId.isValid(causeId)) {
+      throw new BadRequestException('Invalid charity ID format');
+    }
 
-    return {
-      success: true,
-      data: cause,
-    };
+    try {
+      const cause = await this.socialGoodService.getCauseById(causeId);
+
+      return {
+        success: true,
+        data: cause,
+      };
+    } catch (error) {
+      // If it's already an HTTP exception, re-throw it
+      if (error.status) {
+        throw error;
+      }
+      // Otherwise, log and throw a generic error
+      console.error('Error fetching charity cause:', error);
+      throw new NotFoundException('Charity cause not found');
+    }
   }
 
   /**
@@ -64,17 +80,37 @@ export class SocialGoodController {
     @Body('amount') amount: number,
     @Request() req,
   ) {
-    const donation = await this.socialGoodService.directDonate(
-      req.user.walletAddress,
-      causeId,
-      amount,
-    );
+    // Validate MongoDB ObjectId format
+    if (!Types.ObjectId.isValid(causeId)) {
+      throw new BadRequestException('Invalid charity ID format');
+    }
 
-    return {
-      success: true,
-      message: 'Donation successful! Thank you for your contribution.',
-      data: donation,
-    };
+    // Validate amount
+    if (!amount || amount <= 0) {
+      throw new BadRequestException('Invalid donation amount');
+    }
+
+    try {
+      const donation = await this.socialGoodService.directDonate(
+        req.user.walletAddress,
+        causeId,
+        amount,
+      );
+
+      return {
+        success: true,
+        message: 'Donation successful! Thank you for your contribution.',
+        data: donation,
+      };
+    } catch (error) {
+      // If it's already an HTTP exception, re-throw it
+      if (error.status) {
+        throw error;
+      }
+      // Log unexpected errors
+      console.error('Error processing donation:', error);
+      throw new BadRequestException('Failed to process donation');
+    }
   }
 
   /**
@@ -101,13 +137,28 @@ export class SocialGoodController {
    */
   @Get('causes/:causeId/donations')
   async getCauseDonations(@Param('causeId') causeId: string) {
-    const donations = await this.socialGoodService.getCauseDonations(causeId);
+    // Validate MongoDB ObjectId format
+    if (!Types.ObjectId.isValid(causeId)) {
+      throw new BadRequestException('Invalid charity ID format');
+    }
 
-    return {
-      success: true,
-      count: donations.length,
-      data: donations,
-    };
+    try {
+      const donations = await this.socialGoodService.getCauseDonations(causeId);
+
+      return {
+        success: true,
+        count: donations.length,
+        data: donations,
+      };
+    } catch (error) {
+      // If it's already an HTTP exception, re-throw it
+      if (error.status) {
+        throw error;
+      }
+      // Log unexpected errors
+      console.error('Error fetching charity donations:', error);
+      throw new NotFoundException('Charity cause not found');
+    }
   }
 
   /**

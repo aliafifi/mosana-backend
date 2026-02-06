@@ -35,7 +35,7 @@ let PostsService = class PostsService {
             ...(createPostDto.charityPercentage && { charityPercentage: createPostDto.charityPercentage }),
         });
         try {
-            await this.reputationService.updateMetrics(createPostDto.author, {
+            await this.reputationService.updateMetrics(walletAddress, {
                 totalPosts: 1,
             });
         }
@@ -118,6 +118,14 @@ let PostsService = class PostsService {
         if (!updatedPost) {
             throw new common_1.NotFoundException('Post not found');
         }
+        try {
+            await this.reputationService.updateMetrics(updatedPost.walletAddress, {
+                totalLikes: 1,
+            });
+        }
+        catch (error) {
+            console.log('Reputation update failed:', error.message);
+        }
         return updatedPost;
     }
     async unlikePost(postId, walletAddress) {
@@ -163,6 +171,14 @@ let PostsService = class PostsService {
             .populate('dedicatedCause');
         if (!updatedPost) {
             throw new common_1.NotFoundException('Post not found');
+        }
+        try {
+            await this.reputationService.updateMetrics(updatedPost.walletAddress, {
+                totalComments: 1,
+            });
+        }
+        catch (error) {
+            console.log('Reputation update failed:', error.message);
         }
         return updatedPost;
     }

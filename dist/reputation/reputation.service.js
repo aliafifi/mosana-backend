@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var ReputationService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReputationService = void 0;
 const common_1 = require("@nestjs/common");
@@ -18,10 +19,14 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const reputation_schema_1 = require("./schemas/reputation.schema");
 const scoring_interface_1 = require("./interfaces/scoring.interface");
-let ReputationService = class ReputationService {
+const verification_service_1 = require("../verification/verification.service");
+let ReputationService = ReputationService_1 = class ReputationService {
     reputationModel;
-    constructor(reputationModel) {
+    verificationService;
+    logger = new common_1.Logger(ReputationService_1.name);
+    constructor(reputationModel, verificationService) {
         this.reputationModel = reputationModel;
+        this.verificationService = verificationService;
     }
     async calculateReputation(walletAddress) {
         let reputation = await this.reputationModel.findOne({ walletAddress });
@@ -136,11 +141,33 @@ let ReputationService = class ReputationService {
         return reputation;
     }
     async getReputation(walletAddress) {
-        const reputation = await this.reputationModel.findOne({ walletAddress });
+        let reputation = await this.reputationModel.findOne({ walletAddress });
         if (!reputation) {
-            return await this.calculateReputation(walletAddress);
+            reputation = await this.calculateReputation(walletAddress);
         }
-        return reputation;
+        const reputationObj = reputation.toObject();
+        let verificationMultiplier = 1.0;
+        let verificationStatus = null;
+        try {
+            const status = await this.verificationService.checkVerificationStatus(walletAddress);
+            verificationStatus = status;
+            verificationMultiplier = status.totalMultiplierBonus;
+        }
+        catch (error) {
+            this.logger.warn(`Failed to get verification multiplier for ${walletAddress}: ${error.message}`);
+        }
+        const baseMultiplier = reputation.rewardMultiplier || 1.0;
+        const totalMultiplier = Math.min(baseMultiplier * verificationMultiplier, 5.0);
+        return {
+            ...reputationObj,
+            verificationMultiplier,
+            totalMultiplier,
+            verificationStatus: verificationStatus || undefined,
+        };
+    }
+    async calculateRewardMultiplier(walletAddress) {
+        const reputationData = await this.getReputation(walletAddress);
+        return reputationData.totalMultiplier || 1.0;
     }
     async updateMetrics(walletAddress, updates) {
         let reputation = await this.reputationModel.findOne({ walletAddress });
@@ -151,13 +178,22 @@ let ReputationService = class ReputationService {
             });
         }
         Object.keys(updates).forEach(key => {
-            reputation.metrics[key] = (reputation.metrics[key] || 0) + updates[key];
+            if (reputation) {
+                reputation.metrics[key] = (reputation.metrics[key] || 0) + updates[key];
+            }
         });
-        await reputation.save();
-        await this.calculateReputation(walletAddress);
+        if (reputation) {
+            await reputation.save();
+            await this.calculateReputation(walletAddress);
+        }
     }
     async applyPenalty(penaltyDto, adminWallet) {
-        const reputation = await this.getReputation(penaltyDto.walletAddress);
+        const reputation = await this.reputationModel.findOne({
+            walletAddress: penaltyDto.walletAddress
+        });
+        if (!reputation) {
+            throw new common_1.NotFoundException('Reputation not found');
+        }
         reputation.penalties.push({
             reason: penaltyDto.reason,
             points: penaltyDto.points,
@@ -193,9 +229,10 @@ let ReputationService = class ReputationService {
     }
 };
 exports.ReputationService = ReputationService;
-exports.ReputationService = ReputationService = __decorate([
+exports.ReputationService = ReputationService = ReputationService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(reputation_schema_1.Reputation.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        verification_service_1.VerificationService])
 ], ReputationService);
 //# sourceMappingURL=reputation.service.js.map

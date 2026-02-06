@@ -12,6 +12,18 @@ export declare class RewardsController {
         commentsGiven: number;
         totalPoints: number;
         estimatedTokens: number;
+        reputationMultiplier?: undefined;
+    } | {
+        date: Date;
+        postsCreated: number;
+        likesReceived: number;
+        commentsReceived: number;
+        viewsReceived: number;
+        likesGiven: number;
+        commentsGiven: number;
+        totalPoints: number;
+        estimatedTokens: number;
+        reputationMultiplier: number;
     }>;
     getRewardsHistory(req: any, page: number, limit: number): Promise<{
         totalEarned: any;

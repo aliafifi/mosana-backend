@@ -13,6 +13,7 @@ const social_good_service_1 = require("./social-good.service");
 const social_good_controller_1 = require("./social-good.controller");
 const cause_schema_1 = require("./schemas/cause.schema");
 const donation_schema_1 = require("./schemas/donation.schema");
+const reputation_module_1 = require("../reputation/reputation.module");
 let SocialGoodModule = class SocialGoodModule {
 };
 exports.SocialGoodModule = SocialGoodModule;
@@ -23,6 +24,7 @@ exports.SocialGoodModule = SocialGoodModule = __decorate([
                 { name: cause_schema_1.Cause.name, schema: cause_schema_1.CauseSchema },
                 { name: donation_schema_1.Donation.name, schema: donation_schema_1.DonationSchema },
             ]),
+            reputation_module_1.ReputationModule,
         ],
         controllers: [social_good_controller_1.SocialGoodController],
         providers: [social_good_service_1.SocialGoodService],

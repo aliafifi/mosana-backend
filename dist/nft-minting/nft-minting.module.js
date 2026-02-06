@@ -15,6 +15,7 @@ const nft_schema_1 = require("./schemas/nft.schema");
 const arweave_service_1 = require("./services/arweave.service");
 const posts_module_1 = require("../posts/posts.module");
 const users_module_1 = require("../users/users.module");
+const reputation_module_1 = require("../reputation/reputation.module");
 const post_schema_1 = require("../posts/post.schema");
 let NftMintingModule = class NftMintingModule {
 };
@@ -28,6 +29,7 @@ exports.NftMintingModule = NftMintingModule = __decorate([
             ]),
             posts_module_1.PostsModule,
             users_module_1.UsersModule,
+            reputation_module_1.ReputationModule,
         ],
         providers: [
             nft_minting_service_1.NftMintingService,

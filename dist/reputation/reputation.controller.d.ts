@@ -6,44 +6,18 @@ export declare class ReputationController {
     getReputation(walletAddress: string): Promise<{
         success: boolean;
         data: {
-            walletAddress: string;
-            totalScore: number;
-            level: string;
-            rewardMultiplier: number;
-            breakdown: {
-                accountAge: {
-                    points: number;
-                    maxPoints: number;
-                };
-                engagement: {
-                    points: number;
-                    maxPoints: number;
-                };
-                economic: {
-                    points: number;
-                    maxPoints: number;
-                };
-                socialGood: {
-                    points: number;
-                    maxPoints: number;
-                };
-                dao: {
-                    points: number;
-                    maxPoints: number;
-                };
-                nft: {
-                    points: number;
-                    maxPoints: number;
-                };
-                trust: {
-                    points: number;
-                    maxPoints: number;
-                };
-            };
-            badges: string[];
-            isFlagged: boolean;
-            flagReason: string | undefined;
-            lastCalculated: Date;
+            walletAddress: any;
+            totalScore: any;
+            level: any;
+            rewardMultiplier: any;
+            verificationMultiplier: any;
+            totalMultiplier: any;
+            verificationStatus: any;
+            breakdown: any;
+            badges: any;
+            isFlagged: any;
+            flagReason: any;
+            lastCalculated: any;
         };
         message: string;
     } | {
@@ -83,66 +57,20 @@ export declare class ReputationController {
     getMyReputation(req: any): Promise<{
         success: boolean;
         data: {
-            walletAddress: string;
-            totalScore: number;
-            level: string;
-            rewardMultiplier: number;
-            breakdown: {
-                accountAge: {
-                    points: number;
-                    maxPoints: number;
-                };
-                engagement: {
-                    points: number;
-                    maxPoints: number;
-                };
-                economic: {
-                    points: number;
-                    maxPoints: number;
-                };
-                socialGood: {
-                    points: number;
-                    maxPoints: number;
-                };
-                dao: {
-                    points: number;
-                    maxPoints: number;
-                };
-                nft: {
-                    points: number;
-                    maxPoints: number;
-                };
-                trust: {
-                    points: number;
-                    maxPoints: number;
-                };
-            };
-            metrics: {
-                totalPosts: number;
-                totalLikes: number;
-                totalComments: number;
-                tipsReceived: number;
-                tipsSent: number;
-                nftsMinted: number;
-                nftsSold: number;
-                nftRevenue: number;
-                charityDonations: number;
-                daosJoined: number;
-                proposalsCreated: number;
-                votesCast: number;
-                venturesJoined: number;
-            };
-            badges: string[];
-            penalties: {
-                reason: string;
-                points: number;
-                date: Date;
-                adminWallet?: string;
-                details?: string;
-            }[];
-            isFlagged: boolean;
-            lastCalculated: Date;
-            calculationCount: number;
+            walletAddress: any;
+            totalScore: any;
+            level: any;
+            rewardMultiplier: any;
+            verificationMultiplier: any;
+            totalMultiplier: any;
+            verificationStatus: any;
+            breakdown: any;
+            metrics: any;
+            badges: any;
+            penalties: any;
+            isFlagged: any;
+            lastCalculated: any;
+            calculationCount: any;
         };
         message: string;
     } | {

@@ -5,7 +5,6 @@ export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
     getMyProfile(req: any): Promise<import("./user.schema").User>;
-    getUserProfile(walletAddress: string): Promise<import("./user.schema").User>;
     updateProfile(req: any, updateProfileDto: UpdateProfileDto): Promise<import("./user.schema").User>;
     setNftProfilePicture(req: any, setNftPfpDto: SetNftPfpDto): Promise<import("./user.schema").User>;
     followUser(req: any, walletAddress: string): Promise<{
@@ -14,4 +13,5 @@ export declare class UsersController {
     unfollowUser(req: any, walletAddress: string): Promise<{
         message: string;
     }>;
+    getUserProfile(walletAddress: string): Promise<import("./user.schema").User>;
 }

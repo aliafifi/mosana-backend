@@ -16,6 +16,7 @@ exports.PostsController = void 0;
 const common_1 = require("@nestjs/common");
 const posts_service_1 = require("./posts.service");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const mongodb_id_pipe_1 = require("../common/pipes/mongodb-id.pipe");
 const create_post_dto_1 = require("./dto/create-post.dto");
 const create_comment_dto_1 = require("./dto/create-comment.dto");
 let PostsController = class PostsController {
@@ -92,7 +93,7 @@ __decorate([
 ], PostsController.prototype, "getTrending", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', mongodb_id_pipe_1.MongoIdPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
@@ -110,7 +111,7 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(':id/like'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
@@ -119,7 +120,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Delete)(':id/like'),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
@@ -128,7 +129,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(':id/comments'),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Request)()),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -138,7 +139,7 @@ __decorate([
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),

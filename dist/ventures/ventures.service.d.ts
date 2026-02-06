@@ -2,11 +2,13 @@ import { Model } from 'mongoose';
 import { VentureDocument } from './schemas/venture.schema';
 import { RevenueSplitDocument } from './schemas/revenue-split.schema';
 import { CreateVentureDto } from './dto/create-venture.dto';
+import { ReputationService } from '../reputation/reputation.service';
 export declare class VenturesService {
     private ventureModel;
     private revenueSplitModel;
+    private reputationService;
     private readonly logger;
-    constructor(ventureModel: Model<VentureDocument>, revenueSplitModel: Model<RevenueSplitDocument>);
+    constructor(ventureModel: Model<VentureDocument>, revenueSplitModel: Model<RevenueSplitDocument>, reputationService: ReputationService);
     createVenture(createVentureDto: CreateVentureDto, initiatorWallet: string): Promise<VentureDocument>;
     acceptVenture(ventureId: string, walletAddress: string): Promise<VentureDocument>;
     rejectVenture(ventureId: string, walletAddress: string): Promise<VentureDocument>;
@@ -16,5 +18,6 @@ export declare class VenturesService {
     getPendingInvitations(walletAddress: string): Promise<VentureDocument[]>;
     getVentureSplitHistory(ventureId: string): Promise<RevenueSplitDocument[]>;
     getUserVentureEarnings(walletAddress: string): Promise<any>;
+    getUserVentureStats(walletAddress: string): Promise<any>;
     getVentureStats(): Promise<any>;
 }

@@ -19,6 +19,7 @@ const create_dao_dto_1 = require("./dto/create-dao.dto");
 const create_proposal_dto_1 = require("./dto/create-proposal.dto");
 const cast_vote_dto_1 = require("./dto/cast-vote.dto");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const mongodb_id_pipe_1 = require("../common/pipes/mongodb-id.pipe");
 let DaoController = class DaoController {
     daoService;
     constructor(daoService) {
@@ -210,7 +211,7 @@ __decorate([
 ], DaoController.prototype, "getAllDaos", null);
 __decorate([
     (0, common_1.Get)(':daoId'),
-    __param(0, (0, common_1.Param)('daoId')),
+    __param(0, (0, common_1.Param)('daoId', mongodb_id_pipe_1.MongoIdPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
@@ -227,7 +228,7 @@ __decorate([
     (0, common_1.Post)(':daoId/join'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    __param(0, (0, common_1.Param)('daoId')),
+    __param(0, (0, common_1.Param)('daoId', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
@@ -236,7 +237,7 @@ __decorate([
 __decorate([
     (0, common_1.Delete)(':daoId/leave'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('daoId')),
+    __param(0, (0, common_1.Param)('daoId', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
@@ -246,7 +247,7 @@ __decorate([
     (0, common_1.Post)(':daoId/proposals'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
-    __param(0, (0, common_1.Param)('daoId')),
+    __param(0, (0, common_1.Param)('daoId', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -255,7 +256,7 @@ __decorate([
 ], DaoController.prototype, "createProposal", null);
 __decorate([
     (0, common_1.Get)(':daoId/proposals'),
-    __param(0, (0, common_1.Param)('daoId')),
+    __param(0, (0, common_1.Param)('daoId', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
@@ -263,7 +264,7 @@ __decorate([
 ], DaoController.prototype, "getDaoProposals", null);
 __decorate([
     (0, common_1.Get)(':daoId/proposals/:proposalId'),
-    __param(0, (0, common_1.Param)('proposalId')),
+    __param(0, (0, common_1.Param)('proposalId', mongodb_id_pipe_1.MongoIdPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
@@ -272,7 +273,7 @@ __decorate([
     (0, common_1.Post)(':daoId/proposals/:proposalId/vote'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    __param(0, (0, common_1.Param)('proposalId')),
+    __param(0, (0, common_1.Param)('proposalId', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -282,7 +283,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)(':daoId/proposals/:proposalId/my-vote'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __param(0, (0, common_1.Param)('proposalId')),
+    __param(0, (0, common_1.Param)('proposalId', mongodb_id_pipe_1.MongoIdPipe)),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),

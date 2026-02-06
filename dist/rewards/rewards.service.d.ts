@@ -2,13 +2,15 @@ import { Model } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { DailyEngagementDocument } from './reward.schema';
 import { Reward, RewardDocument } from './reward.schema';
+import { ReputationService } from '../reputation/reputation.service';
 export declare class RewardsService {
     private dailyEngagementModel;
     private rewardModel;
     private configService;
+    private reputationService;
     private readonly logger;
     private solanaConnection;
-    constructor(dailyEngagementModel: Model<DailyEngagementDocument>, rewardModel: Model<RewardDocument>, configService: ConfigService);
+    constructor(dailyEngagementModel: Model<DailyEngagementDocument>, rewardModel: Model<RewardDocument>, configService: ConfigService, reputationService: ReputationService);
     trackEngagement(walletAddress: string, action: 'post' | 'likeReceived' | 'commentReceived' | 'view' | 'likeGiven' | 'commentGiven'): Promise<void>;
     getTodayEngagement(walletAddress: string): Promise<{
         date: Date;
@@ -20,6 +22,18 @@ export declare class RewardsService {
         commentsGiven: number;
         totalPoints: number;
         estimatedTokens: number;
+        reputationMultiplier?: undefined;
+    } | {
+        date: Date;
+        postsCreated: number;
+        likesReceived: number;
+        commentsReceived: number;
+        viewsReceived: number;
+        likesGiven: number;
+        commentsGiven: number;
+        totalPoints: number;
+        estimatedTokens: number;
+        reputationMultiplier: number;
     }>;
     getRewardsHistory(walletAddress: string, page?: number, limit?: number): Promise<{
         totalEarned: any;

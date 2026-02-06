@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const social_good_service_1 = require("./social-good.service");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const create_cause_dto_1 = require("./dto/create-cause.dto");
+const mongoose_1 = require("mongoose");
 let SocialGoodController = class SocialGoodController {
     socialGoodService;
     constructor(socialGoodService) {
@@ -39,19 +40,46 @@ let SocialGoodController = class SocialGoodController {
         };
     }
     async getCauseById(causeId) {
-        const cause = await this.socialGoodService.getCauseById(causeId);
-        return {
-            success: true,
-            data: cause,
-        };
+        if (!mongoose_1.Types.ObjectId.isValid(causeId)) {
+            throw new common_1.BadRequestException('Invalid charity ID format');
+        }
+        try {
+            const cause = await this.socialGoodService.getCauseById(causeId);
+            return {
+                success: true,
+                data: cause,
+            };
+        }
+        catch (error) {
+            if (error.status) {
+                throw error;
+            }
+            console.error('Error fetching charity cause:', error);
+            throw new common_1.NotFoundException('Charity cause not found');
+        }
     }
     async directDonate(causeId, amount, req) {
-        const donation = await this.socialGoodService.directDonate(req.user.walletAddress, causeId, amount);
-        return {
-            success: true,
-            message: 'Donation successful! Thank you for your contribution.',
-            data: donation,
-        };
+        if (!mongoose_1.Types.ObjectId.isValid(causeId)) {
+            throw new common_1.BadRequestException('Invalid charity ID format');
+        }
+        if (!amount || amount <= 0) {
+            throw new common_1.BadRequestException('Invalid donation amount');
+        }
+        try {
+            const donation = await this.socialGoodService.directDonate(req.user.walletAddress, causeId, amount);
+            return {
+                success: true,
+                message: 'Donation successful! Thank you for your contribution.',
+                data: donation,
+            };
+        }
+        catch (error) {
+            if (error.status) {
+                throw error;
+            }
+            console.error('Error processing donation:', error);
+            throw new common_1.BadRequestException('Failed to process donation');
+        }
     }
     async getMyDonations(req) {
         const donations = await this.socialGoodService.getUserDonations(req.user.walletAddress);
@@ -62,12 +90,24 @@ let SocialGoodController = class SocialGoodController {
         };
     }
     async getCauseDonations(causeId) {
-        const donations = await this.socialGoodService.getCauseDonations(causeId);
-        return {
-            success: true,
-            count: donations.length,
-            data: donations,
-        };
+        if (!mongoose_1.Types.ObjectId.isValid(causeId)) {
+            throw new common_1.BadRequestException('Invalid charity ID format');
+        }
+        try {
+            const donations = await this.socialGoodService.getCauseDonations(causeId);
+            return {
+                success: true,
+                count: donations.length,
+                data: donations,
+            };
+        }
+        catch (error) {
+            if (error.status) {
+                throw error;
+            }
+            console.error('Error fetching charity donations:', error);
+            throw new common_1.NotFoundException('Charity cause not found');
+        }
     }
     async getPlatformStats() {
         const stats = await this.socialGoodService.getPlatformStats();

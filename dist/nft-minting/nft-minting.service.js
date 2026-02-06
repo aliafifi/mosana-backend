@@ -28,16 +28,19 @@ const umi_1 = require("@metaplex-foundation/umi");
 const bs58_1 = __importDefault(require("bs58"));
 const nft_schema_1 = require("./schemas/nft.schema");
 const arweave_service_1 = require("./services/arweave.service");
+const reputation_service_1 = require("../reputation/reputation.service");
 let NftMintingService = NftMintingService_1 = class NftMintingService {
     nftModel;
     arweaveService;
     configService;
+    reputationService;
     logger = new common_1.Logger(NftMintingService_1.name);
     connection;
-    constructor(nftModel, arweaveService, configService) {
+    constructor(nftModel, arweaveService, configService, reputationService) {
         this.nftModel = nftModel;
         this.arweaveService = arweaveService;
         this.configService = configService;
+        this.reputationService = reputationService;
         const rpcUrl = this.configService.get('SOLANA_RPC_URL') || 'https://api.mainnet-beta.solana.com';
         this.connection = new web3_js_1.Connection(rpcUrl, 'confirmed');
     }
@@ -71,6 +74,14 @@ let NftMintingService = NftMintingService_1 = class NftMintingService {
             });
             await nft.save();
             this.logger.log(`NFT saved to database: ${nft._id}`);
+            try {
+                await this.reputationService.updateMetrics(post.author.walletAddress, {
+                    nftsMinted: 1,
+                });
+            }
+            catch (error) {
+                this.logger.warn(`Reputation update failed for ${post.author.walletAddress}: ${error.message}`);
+            }
             return nft;
         }
         catch (error) {
@@ -151,6 +162,7 @@ exports.NftMintingService = NftMintingService = NftMintingService_1 = __decorate
     __param(0, (0, mongoose_1.InjectModel)(nft_schema_1.Nft.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         arweave_service_1.ArweaveService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        reputation_service_1.ReputationService])
 ], NftMintingService);
 //# sourceMappingURL=nft-minting.service.js.map

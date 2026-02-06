@@ -13,6 +13,7 @@ const dao_controller_1 = require("./dao.controller");
 const dao_service_1 = require("./dao.service");
 const dao_schema_1 = require("./schemas/dao.schema");
 const proposal_schema_1 = require("./schemas/proposal.schema");
+const reputation_module_1 = require("../reputation/reputation.module");
 let DaoModule = class DaoModule {
 };
 exports.DaoModule = DaoModule;
@@ -23,6 +24,7 @@ exports.DaoModule = DaoModule = __decorate([
                 { name: dao_schema_1.Dao.name, schema: dao_schema_1.DaoSchema },
                 { name: proposal_schema_1.Proposal.name, schema: proposal_schema_1.ProposalSchema },
             ]),
+            reputation_module_1.ReputationModule,
         ],
         controllers: [dao_controller_1.DaoController],
         providers: [dao_service_1.DaoService],

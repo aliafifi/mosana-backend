@@ -273,7 +273,51 @@ export class VenturesService {
   }
 
   /**
-   * Get venture statistics
+   * Get user-specific venture statistics
+   */
+  async getUserVentureStats(walletAddress: string): Promise<any> {
+    // Get user's ventures
+    const userVentures = await this.ventureModel.find({
+      'collaborators.walletAddress': walletAddress,
+    });
+
+    // Count by status
+    const venturesByStatus = {
+      active: userVentures.filter(v => v.status === 'active').length,
+      pending: userVentures.filter(v => v.status === 'pending').length,
+      rejected: userVentures.filter(v => v.status === 'rejected').length,
+    };
+
+    // Get user's earnings from ventures
+    const earnings = await this.getUserVentureEarnings(walletAddress);
+
+    // Calculate user's share percentages
+    const shareInfo = userVentures.map(venture => {
+      const collaborator = venture.collaborators.find(
+        c => c.walletAddress === walletAddress,
+      );
+      return {
+        ventureId: venture._id,
+        postId: venture.postId,
+        status: venture.status,
+        myShare: collaborator?.sharePercentage || 0,
+        totalRevenue: venture.totalRevenueGenerated,
+      };
+    });
+
+    return {
+      walletAddress,
+      summary: {
+        totalVentures: userVentures.length,
+        ...venturesByStatus,
+      },
+      earnings,
+      ventures: shareInfo,
+    };
+  }
+
+  /**
+   * Get platform-wide venture statistics
    */
   async getVentureStats(): Promise<any> {
     const totalVentures = await this.ventureModel.countDocuments();

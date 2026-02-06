@@ -13,6 +13,7 @@ const ventures_service_1 = require("./ventures.service");
 const ventures_controller_1 = require("./ventures.controller");
 const venture_schema_1 = require("./schemas/venture.schema");
 const revenue_split_schema_1 = require("./schemas/revenue-split.schema");
+const reputation_module_1 = require("../reputation/reputation.module");
 let VenturesModule = class VenturesModule {
 };
 exports.VenturesModule = VenturesModule;
@@ -23,6 +24,7 @@ exports.VenturesModule = VenturesModule = __decorate([
                 { name: venture_schema_1.Venture.name, schema: venture_schema_1.VentureSchema },
                 { name: revenue_split_schema_1.RevenueSplit.name, schema: revenue_split_schema_1.RevenueSplitSchema },
             ]),
+            reputation_module_1.ReputationModule,
         ],
         controllers: [ventures_controller_1.VenturesController],
         providers: [ventures_service_1.VenturesService],

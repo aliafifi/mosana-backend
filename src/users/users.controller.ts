@@ -27,12 +27,6 @@ export class UsersController {
     return this.usersService.findByWallet(req.user.walletAddress);
   }
 
-  // Get any user's public profile by wallet address
-  @Get(':walletAddress')
-  async getUserProfile(@Param('walletAddress') walletAddress: string) {
-    return this.usersService.findByWallet(walletAddress);
-  }
-
   // Update authenticated user's profile
   @UseGuards(JwtAuthGuard)
   @Put('profile')
@@ -78,5 +72,11 @@ export class UsersController {
     @Param('walletAddress') walletAddress: string,
   ) {
     return this.usersService.unfollowUser(req.user.walletAddress, walletAddress);
+  }
+
+  // Get any user's public profile by wallet address (MUST be last to avoid catching other routes)
+  @Get(':walletAddress')
+  async getUserProfile(@Param('walletAddress') walletAddress: string) {
+    return this.usersService.findByWallet(walletAddress);
   }
 }

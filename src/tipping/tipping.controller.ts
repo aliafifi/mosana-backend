@@ -53,8 +53,15 @@ export class TippingController {
     return this.tippingService.getPostTips(postId);
   }
 
-  // Get platform tipping statistics (public - transparency!)
+  // Get authenticated user's tipping statistics
+  @UseGuards(JwtAuthGuard)
   @Get('stats')
+  async getUserStats(@Request() req) {
+    return this.tippingService.getUserStats(req.user.walletAddress);
+  }
+
+  // Get platform tipping statistics (public - transparency!)
+  @Get('stats/platform')
   async getPlatformStats() {
     return this.tippingService.getPlatformStats();
   }

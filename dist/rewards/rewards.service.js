@@ -23,16 +23,19 @@ const web3_js_1 = require("@solana/web3.js");
 const reward_schema_1 = require("./reward.schema");
 const reward_schema_2 = require("./reward.schema");
 const rewards_config_1 = require("./rewards.config");
+const reputation_service_1 = require("../reputation/reputation.service");
 let RewardsService = RewardsService_1 = class RewardsService {
     dailyEngagementModel;
     rewardModel;
     configService;
+    reputationService;
     logger = new common_1.Logger(RewardsService_1.name);
     solanaConnection;
-    constructor(dailyEngagementModel, rewardModel, configService) {
+    constructor(dailyEngagementModel, rewardModel, configService, reputationService) {
         this.dailyEngagementModel = dailyEngagementModel;
         this.rewardModel = rewardModel;
         this.configService = configService;
+        this.reputationService = reputationService;
         const rpcUrl = this.configService.get('SOLANA_RPC_URL');
         this.solanaConnection = new web3_js_1.Connection(rpcUrl || 'https://api.devnet.solana.com');
     }
@@ -109,9 +112,18 @@ let RewardsService = RewardsService_1 = class RewardsService {
                 estimatedTokens: 0,
             };
         }
+        let reputationMultiplier = 1.0;
+        try {
+            const reputation = await this.reputationService.getReputation(walletAddress);
+            reputationMultiplier = reputation.rewardMultiplier;
+        }
+        catch (error) {
+            this.logger.warn(`Failed to get reputation for ${walletAddress}: ${error.message}`);
+        }
         const currentYear = new Date().getFullYear();
         const dailyPool = rewards_config_1.TOKENOMICS.getDailyPool(currentYear);
-        const estimatedTokens = Math.floor(dailyPool * 0.01);
+        const baseEstimate = Math.floor(dailyPool * 0.01);
+        const estimatedTokens = Math.floor(baseEstimate * reputationMultiplier);
         return {
             date: engagement.date,
             postsCreated: engagement.postsCreated,
@@ -122,6 +134,7 @@ let RewardsService = RewardsService_1 = class RewardsService {
             commentsGiven: engagement.commentsGiven,
             totalPoints: engagement.totalPoints,
             estimatedTokens,
+            reputationMultiplier,
         };
     }
     async getRewardsHistory(walletAddress, page = 1, limit = 30) {
@@ -158,10 +171,26 @@ let RewardsService = RewardsService_1 = class RewardsService {
                 this.logger.log('No eligible users for distribution');
                 return;
             }
-            const totalPoints = engagements.reduce((sum, e) => sum + e.totalPoints, 0);
-            this.logger.log(`Total points: ${totalPoints}, Daily pool: ${dailyPool}`);
+            let totalWeightedPoints = 0;
+            const userMultipliers = new Map();
             for (const engagement of engagements) {
-                const userShare = engagement.totalPoints / totalPoints;
+                try {
+                    const reputation = await this.reputationService.getReputation(engagement.walletAddress);
+                    const multiplier = reputation.rewardMultiplier;
+                    userMultipliers.set(engagement.walletAddress, multiplier);
+                    totalWeightedPoints += engagement.totalPoints * multiplier;
+                }
+                catch (error) {
+                    userMultipliers.set(engagement.walletAddress, 1.0);
+                    totalWeightedPoints += engagement.totalPoints;
+                    this.logger.warn(`Failed to get reputation for ${engagement.walletAddress}: ${error.message}`);
+                }
+            }
+            this.logger.log(`Total weighted points: ${totalWeightedPoints}, Daily pool: ${dailyPool}`);
+            for (const engagement of engagements) {
+                const multiplier = userMultipliers.get(engagement.walletAddress) || 1.0;
+                const weightedPoints = engagement.totalPoints * multiplier;
+                const userShare = weightedPoints / totalWeightedPoints;
                 const tokensEarned = Math.floor(dailyPool * userShare);
                 if (tokensEarned < 1) {
                     continue;
@@ -179,7 +208,7 @@ let RewardsService = RewardsService_1 = class RewardsService {
                     engagement.tokensEarned = tokensEarned;
                     engagement.isDistributed = true;
                     await engagement.save();
-                    this.logger.log(`Distributed ${tokensEarned} tokens to ${engagement.walletAddress}`);
+                    this.logger.log(`Distributed ${tokensEarned} tokens to ${engagement.walletAddress} (${multiplier}x multiplier)`);
                 }
                 catch (error) {
                     this.logger.error(`Failed to distribute to ${engagement.walletAddress}: ${error.message}`);
@@ -226,6 +255,7 @@ exports.RewardsService = RewardsService = RewardsService_1 = __decorate([
     __param(1, (0, mongoose_1.InjectModel)(reward_schema_2.Reward.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        reputation_service_1.ReputationService])
 ], RewardsService);
 //# sourceMappingURL=rewards.service.js.map

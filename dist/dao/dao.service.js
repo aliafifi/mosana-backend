@@ -19,13 +19,16 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const dao_schema_1 = require("./schemas/dao.schema");
 const proposal_schema_1 = require("./schemas/proposal.schema");
+const reputation_service_1 = require("../reputation/reputation.service");
 let DaoService = DaoService_1 = class DaoService {
     daoModel;
     proposalModel;
+    reputationService;
     logger = new common_1.Logger(DaoService_1.name);
-    constructor(daoModel, proposalModel) {
+    constructor(daoModel, proposalModel, reputationService) {
         this.daoModel = daoModel;
         this.proposalModel = proposalModel;
+        this.reputationService = reputationService;
     }
     async createDao(createDaoDto, creatorWallet) {
         this.logger.log(`Creating DAO: ${createDaoDto.name} by ${creatorWallet}`);
@@ -41,6 +44,14 @@ let DaoService = DaoService_1 = class DaoService {
             },
         });
         await dao.save();
+        try {
+            await this.reputationService.updateMetrics(creatorWallet, {
+                daosJoined: 1,
+            });
+        }
+        catch (error) {
+            this.logger.warn(`Reputation update failed for ${creatorWallet}: ${error.message}`);
+        }
         this.logger.log(`DAO created: ${dao._id}`);
         return dao;
     }
@@ -85,6 +96,14 @@ let DaoService = DaoService_1 = class DaoService {
         dao.members.push(walletAddress);
         dao.memberCount = dao.members.length;
         await dao.save();
+        try {
+            await this.reputationService.updateMetrics(walletAddress, {
+                daosJoined: 1,
+            });
+        }
+        catch (error) {
+            this.logger.warn(`Reputation update failed for ${walletAddress}: ${error.message}`);
+        }
         this.logger.log(`User ${walletAddress} joined DAO ${daoId}`);
         return dao;
     }
@@ -127,6 +146,14 @@ let DaoService = DaoService_1 = class DaoService {
         await proposal.save();
         dao.proposalCount++;
         await dao.save();
+        try {
+            await this.reputationService.updateMetrics(proposerWallet, {
+                proposalsCreated: 1,
+            });
+        }
+        catch (error) {
+            this.logger.warn(`Reputation update failed for ${proposerWallet}: ${error.message}`);
+        }
         this.logger.log(`Proposal created: ${proposal._id} in DAO ${daoId}`);
         return proposal;
     }
@@ -185,6 +212,14 @@ let DaoService = DaoService_1 = class DaoService {
         }
         proposal.participationRate = (proposal.totalVotes / dao.memberCount) * 100;
         await proposal.save();
+        try {
+            await this.reputationService.updateMetrics(voterWallet, {
+                votesCast: 1,
+            });
+        }
+        catch (error) {
+            this.logger.warn(`Reputation update failed for ${voterWallet}: ${error.message}`);
+        }
         this.logger.log(`Vote cast: ${voterWallet} voted ${castVoteDto.vote} on proposal ${proposalId}`);
         await this.checkAndFinalizeProposal(proposal, dao);
         return proposal;
@@ -272,6 +307,7 @@ exports.DaoService = DaoService = DaoService_1 = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(dao_schema_1.Dao.name)),
     __param(1, (0, mongoose_1.InjectModel)(proposal_schema_1.Proposal.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        reputation_service_1.ReputationService])
 ], DaoService);
 //# sourceMappingURL=dao.service.js.map

@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Put, Param, Body, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
 import { VenturesService } from './ventures.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { MongoIdPipe } from '../common/pipes/mongodb-id.pipe';
 import { CreateVentureDto } from './dto/create-venture.dto';
 
 @Controller('ventures')
@@ -37,7 +38,7 @@ export class VenturesController {
   @Put(':ventureId/accept')
   @UseGuards(JwtAuthGuard)
   async acceptVenture(
-    @Param('ventureId') ventureId: string,
+    @Param('ventureId', MongoIdPipe) ventureId: string,
     @Request() req,
   ) {
     const venture = await this.venturesService.acceptVenture(
@@ -59,7 +60,7 @@ export class VenturesController {
   @Put(':ventureId/reject')
   @UseGuards(JwtAuthGuard)
   async rejectVenture(
-    @Param('ventureId') ventureId: string,
+    @Param('ventureId', MongoIdPipe) ventureId: string,
     @Request() req,
   ) {
     const venture = await this.venturesService.rejectVenture(
@@ -137,7 +138,7 @@ export class VenturesController {
    * Get revenue split history for a venture
    */
   @Get(':ventureId/splits')
-  async getVentureSplits(@Param('ventureId') ventureId: string) {
+  async getVentureSplits(@Param('ventureId', MongoIdPipe) ventureId: string) {
     const splits = await this.venturesService.getVentureSplitHistory(ventureId);
 
     return {
@@ -166,9 +167,26 @@ export class VenturesController {
 
   /**
    * GET /api/ventures/stats
-   * Get platform venture statistics
+   * Get user's venture statistics
    */
   @Get('stats')
+  @UseGuards(JwtAuthGuard)
+  async getUserVentureStats(@Request() req) {
+    const stats = await this.venturesService.getUserVentureStats(
+      req.user.walletAddress,
+    );
+
+    return {
+      success: true,
+      data: stats,
+    };
+  }
+
+  /**
+   * GET /api/ventures/stats/platform
+   * Get platform-wide venture statistics (public - transparency!)
+   */
+  @Get('stats/platform')
   async getVentureStats() {
     const stats = await this.venturesService.getVentureStats();
 
